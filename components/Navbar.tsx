@@ -6,7 +6,7 @@ const NAV_LINKS = [
   { label: "หน้าแรก", href: "#" },
   { label: "เตรียมพร้อม", href: "#prepare" },
   { label: "ชุมชนนักเรียน", href: "#community" },
-  { label: "ข่าวสาร", href: "#news" },
+  { label: "ข่าวสารร", href: "#news" },
 ];
 
 export default function Navbar() {
