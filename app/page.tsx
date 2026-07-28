@@ -196,14 +196,12 @@ export default function Home() {
             </p>
           </div>
 
-          {/* ปรับ gap-y ให้กว้างขึ้นเพื่อเผื่อพื้นที่ให้รูปภาพที่ทะลุขึ้นมา */}
           <div className="mt-12 grid gap-x-6 gap-y-16 sm:grid-cols-2 lg:grid-cols-3">
             {TEAM.map((member, index) => (
               <div
                 key={index}
                 className="relative flex items-center rounded-2xl bg-white px-6 py-6 shadow-[0_8px_30px_rgb(0,0,0,0.06)] min-h-[110px]"
               >
-                {/* ส่วนข้อความ */}
                 <div className="z-10 w-3/5">
                   <h4 className="text-[17px] font-bold text-[#1e3a8a]">
                     {member.name}
@@ -213,7 +211,6 @@ export default function Home() {
                   </p>
                 </div>
 
-                {/* ส่วนรูปภาพแบบทะลุขอบ (ใช้รูปภาพพื้นหลังใส .png) */}
                 <div className="absolute bottom-0 right-4 h-[160px] w-auto">
                   <img
                     src={member.image}
