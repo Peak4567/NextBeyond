@@ -1,95 +1,29 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import {
+  OFFICIAL_ADMISSION_CRITERIA,
+  type OfficialAdmissionCriteria,
+} from "@/data/official-admissions";
 
-// โครงสร้างข้อมูลเกณฑ์ TCAS
-interface TcasCriteria {
-  id: string;
-  university: string;
-  faculty: string;
-  major: string;
-  round: string;
-  roundName: string;
-  quota: number;
-  gpaxMin: number;
-  criteria: string;
+interface AdmissionApiResponse {
+  criteria: OfficialAdmissionCriteria[];
+  source: {
+    name: string;
+    url: string;
+    syncedAt: string | null;
+    freshness: "live" | "cached";
+  };
 }
-
-// ฐานข้อมูลจำลองเกณฑ์ TCAS
-const MOCK_TCAS_DATA: TcasCriteria[] = [
-  {
-    id: "1",
-    university: "จุฬาลงกรณ์มหาวิทยาลัย",
-    faculty: "วิศวกรรมศาสตร์",
-    major: "สาขาวิชาวิศวกรรมคอมพิวเตอร์",
-    round: "1",
-    roundName: "รอบที่ 1 Portfolio",
-    quota: 100,
-    gpaxMin: 3.5,
-    criteria: "TGAT 20% + TPAT3 30% + ผลงาน Portfolio 50%",
-  },
-  {
-    id: "2",
-    university: "มหาวิทยาลัยมหิดล",
-    faculty: "แพทยศาสตร์ศิริราชพยาบาล",
-    major: "สาขาวิชาแพทยศาสตร์",
-    round: "1",
-    roundName: "รอบที่ 1 Portfolio",
-    quota: 60,
-    gpaxMin: 3.5,
-    criteria: "IELTS/TOEIC + สอบสัมภาษณ์ + Portfolio ด้านวิจัย/จิตอาสา",
-  },
-  {
-    id: "3",
-    university: "มหาวิทยาลัยเกษตรศาสตร์",
-    faculty: "วิทยาศาสตร์",
-    major: "สาขาวิชาวิทยาการข้อมูลและความมั่นคงปลอดภัย",
-    round: "2",
-    roundName: "รอบที่ 2 Quota",
-    quota: 40,
-    gpaxMin: 3.0,
-    criteria: "TGAT 30% + TPAT3 30% + A-Level คณิต1 40%",
-  },
-  {
-    id: "4",
-    university: "มหาวิทยาลัยธรรมศาสตร์",
-    faculty: "นิเทศศาสตร์/วารสารศาสตร์",
-    major: "สาขาวิชาสื่อสารมวลชน",
-    round: "3",
-    roundName: "รอบที่ 3 Admission",
-    quota: 80,
-    gpaxMin: 2.75,
-    criteria: "TGAT 60% + A-Level ภาษาไทย 20% + A-Level สังคม 20%",
-  },
-  {
-    id: "5",
-    university: "สถาบันเทคโนโลยีพระจอมเกล้าเจ้าคุณทหารลาดกระบัง",
-    faculty: "สถาปัตยกรรมและการออกแบบ",
-    major: "สาขาวิชาสถาปัตยกรรมหลัก",
-    round: "1",
-    roundName: "รอบที่ 1 Portfolio",
-    quota: 30,
-    gpaxMin: 3.0,
-    criteria: "TPAT4 (สถาปัตย์) 50% + สอบสัมภาษณ์และตรวจพอร์ต 50%",
-  },
-  {
-    id: "6",
-    university: "มหาวิทยาลัยเชียงใหม่",
-    faculty: "บริหารธุรกิจ",
-    major: "สาขาวิชาการบัญชีและการบริหาร",
-    round: "2",
-    roundName: "รอบที่ 2 Quota ภาคเหนือ",
-    quota: 120,
-    gpaxMin: 3.25,
-    criteria: "TGAT 40% + A-Level คณิต2 30% + A-Level อังกฤษ 30%",
-  },
-];
 
 export default function PreparePage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedRound, setSelectedRound] = useState("");
+  const [criteria, setCriteria] = useState<OfficialAdmissionCriteria[]>(OFFICIAL_ADMISSION_CRITERIA);
+  const [isLoadingCriteria, setIsLoadingCriteria] = useState(true);
+  const [sourceStatus, setSourceStatus] = useState<AdmissionApiResponse["source"] | null>(null);
   const [checklist, setChecklist] = useState([
     { id: 1, name: "ใบ ปพ.1 (5 เทอม)", done: true },
     { id: 2, name: "เกียรติบัตรระดับชาติ (อย่างน้อย 1 ใบ)", done: true },
@@ -100,12 +34,11 @@ export default function PreparePage() {
   ]);
 
   const TRENDING_TAGS = [
-    "วิศวกรรมคอมพิวเตอร์",
-    "แพทยศาสตร์",
-    "วิทยาการข้อมูล",
-    "นิเทศศาสตร์",
-    "บัญชีบริหาร",
-    "สถาปัตย์",
+    "วิทยาศาสตร์นิวเคลียร์",
+    "ชีวเคมี",
+    "วิศวกรรมสิ่งแวดล้อม",
+    "เคมีบูรณาการ",
+    "วิทยาศาสตร์ชีวภาพ",
   ];
 
   const IMPORTANT_DATES = [
@@ -114,6 +47,35 @@ export default function PreparePage() {
     { date: "07", month: "ธ.ค.", title: "สอบ TGAT / TPAT 2-5", desc: "ตรวจสนามสอบและห้องสอบในระบบ" },
     { date: "15", month: "ม.ค.", title: "ประกาศผล Portfolio", desc: "ประกาศรายชื่อผู้มีสิทธิ์สอบสัมภาษณ์" },
   ];
+
+  useEffect(() => {
+    const controller = new AbortController();
+
+    async function loadOfficialCriteria() {
+      try {
+        const response = await fetch("/api/admissions", { signal: controller.signal });
+        if (!response.ok) throw new Error("Unable to load admissions criteria");
+
+        const data: AdmissionApiResponse = await response.json();
+        setCriteria(data.criteria);
+        setSourceStatus(data.source);
+      } catch (error) {
+        if ((error as Error).name !== "AbortError") {
+          setSourceStatus({
+            name: "ข้อมูลสำรองที่ตรวจสอบแล้ว",
+            url: "https://admission.ku.ac.th/majors/project/31/",
+            syncedAt: null,
+            freshness: "cached",
+          });
+        }
+      } finally {
+        setIsLoadingCriteria(false);
+      }
+    }
+
+    loadOfficialCriteria();
+    return () => controller.abort();
+  }, []);
 
   // สลับสถานะของ Checklist
   const toggleChecklist = (id: number) => {
@@ -126,8 +88,7 @@ export default function PreparePage() {
   const completedCount = checklist.filter((item) => item.done).length;
   const progressPercentage = Math.round((completedCount / checklist.length) * 100);
 
-  // กรองเกณฑ์การรับสมัครจริงจากค้นหาและรอบที่เลือก
-  const filteredCriteria = MOCK_TCAS_DATA.filter((item) => {
+  const filteredCriteria = criteria.filter((item) => {
     const matchesSearch =
       searchTerm === "" ||
       item.university.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -166,7 +127,7 @@ export default function PreparePage() {
                 <svg className="h-5 w-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                 </svg>
-                <span>ค้นหาเกณฑ์การรับสมัคร TCAS</span>
+                <span>ค้นหาเกณฑ์การรับสมัคร TCAS69</span>
               </div>
 
               <div className="mt-4 flex flex-col gap-3 sm:flex-row">
@@ -202,7 +163,21 @@ export default function PreparePage() {
                   <option value="1">รอบ 1 Portfolio</option>
                   <option value="2">รอบ 2 Quota</option>
                   <option value="3">รอบ 3 Admission</option>
+                  <option value="4">รอบ 4 Direct Admission</option>
                 </select>
+              </div>
+
+              <div className="mt-3 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-emerald-100 bg-emerald-50 px-3 py-2 text-[11px] text-emerald-800">
+                <span>
+                  {isLoadingCriteria
+                    ? "กำลังตรวจสอบข้อมูลจากประกาศทางการ..."
+                    : sourceStatus?.freshness === "live"
+                      ? "เชื่อมต่อประกาศทางการแล้ว — ระบบตรวจสอบแหล่งข้อมูลทุก 6 ชั่วโมง"
+                      : "แสดงข้อมูลสำรองที่ตรวจสอบแล้ว เนื่องจากแหล่งข้อมูลเชื่อมต่อไม่ได้ชั่วคราว"}
+                </span>
+                {sourceStatus?.syncedAt && (
+                  <span className="font-semibold">อัปเดต: {new Date(sourceStatus.syncedAt).toLocaleString("th-TH")}</span>
+                )}
               </div>
 
               {/* Trending Tags */}
@@ -225,7 +200,11 @@ export default function PreparePage() {
 
               {/* Display Filtered Results */}
               <div className="mt-5 space-y-3">
-                {filteredCriteria.length > 0 ? (
+                {isLoadingCriteria ? (
+                  <div className="rounded-xl border border-dashed border-gray-200 p-8 text-center text-xs text-gray-400">
+                    กำลังโหลดเกณฑ์การรับสมัครจากแหล่งข้อมูลทางการ...
+                  </div>
+                ) : filteredCriteria.length > 0 ? (
                   filteredCriteria.map((item) => (
                     <div
                       key={item.id}
@@ -244,11 +223,22 @@ export default function PreparePage() {
                       </h4>
                       <div className="mt-2 flex flex-wrap items-center gap-4 text-[11px] text-gray-500">
                         <span>จำนวนรับ: <strong className="text-gray-700">{item.quota} คน</strong></span>
-                        <span>GPAX ขั้นต่ำ: <strong className="text-gray-700">{item.gpaxMin.toFixed(2)}</strong></span>
+                        <span>GPAX ขั้นต่ำ: <strong className="text-gray-700">{item.gpaxMin}</strong></span>
                       </div>
                       <div className="mt-2 rounded-lg bg-white p-2.5 text-[11px] text-gray-600 border border-gray-100">
                         <strong className="text-blue-700">เกณฑ์การคัดเลือก: </strong>
                         {item.criteria}
+                      </div>
+                      <div className="mt-2 flex items-center justify-between gap-3 text-[10px] text-gray-400">
+                        <span>ตรวจสอบล่าสุด: {item.verifiedAt}</span>
+                        <a
+                          href={item.sourceUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="font-bold text-blue-600 hover:underline"
+                        >
+                          ดูประกาศต้นทาง ↗
+                        </a>
                       </div>
                     </div>
                   ))
