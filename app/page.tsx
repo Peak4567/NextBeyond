@@ -1,67 +1,12 @@
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import { getCourses, getTeamMembers } from "@/lib/data";
 
-const COURSES = [
-  {
-    title: "วิศวกรรมคอมพิวเตอร์",
-    university: "มหาวิทยาลัยเกษตรศาสตร์",
-    quota: "100",
-    criteria: "TGAT / TPAT",
-    qualification: "แผนการเรียน วิทย์-คณิต, Software, Hardware หรือ อาชีวะ",
-    gpa: "ไม่ระบุ",
-  },
-  {
-    title: "วิศวกรรมคอมพิวเตอร์",
-    university: "มหาวิทยาลัยเกษตรศาสตร์",
-    quota: "100",
-    criteria: "TGAT / TPAT",
-    qualification: "แผนการเรียน วิทย์-คณิต, Software, Hardware หรือ อาชีวะ",
-    gpa: "ไม่ระบุ",
-  },
-  {
-    title: "วิศวกรรมคอมพิวเตอร์",
-    university: "มหาวิทยาลัยเกษตรศาสตร์",
-    quota: "100",
-    criteria: "TGAT / TPAT",
-    qualification: "แผนการเรียน วิทย์-คณิต, Software, Hardware หรือ อาชีวะ",
-    gpa: "ไม่ระบุ",
-  },
-  {
-    title: "วิศวกรรมคอมพิวเตอร์",
-    university: "มหาวิทยาลัยเกษตรศาสตร์",
-    quota: "100",
-    criteria: "TGAT / TPAT",
-    qualification: "แผนการเรียน วิทย์-คณิต, Software, Hardware หรือ อาชีวะ",
-    gpa: "ไม่ระบุ",
-  },
-  {
-    title: "วิศวกรรมคอมพิวเตอร์",
-    university: "มหาวิทยาลัยเกษตรศาสตร์",
-    quota: "100",
-    criteria: "TGAT / TPAT",
-    qualification: "แผนการเรียน วิทย์-คณิต, Software, Hardware หรือ อาชีวะ",
-    gpa: "ไม่ระบุ",
-  },
-  {
-    title: "วิศวกรรมคอมพิวเตอร์",
-    university: "มหาวิทยาลัยเกษตรศาสตร์",
-    quota: "100",
-    criteria: "TGAT / TPAT",
-    qualification: "แผนการเรียน วิทย์-คณิต, Software, Hardware หรือ อาชีวะ",
-    gpa: "ไม่ระบุ",
-  },
-];
+export const dynamic = "force-dynamic";
 
-const TEAM = [
-  { name: "นายศรัณยกร เทพสุนทร", role: "FOUNDER / NextBeyond", image: "/img/peak.png" },
-  { name: "นายศรัณยกร เทพสุนทร", role: "FOUNDER / NextBeyond", image: "/img/peak.png" },
-  { name: "นายศรัณยกร เทพสุนทร", role: "FOUNDER / NextBeyond", image: "/img/peak.png" },
-  { name: "นายศรัณยกร เทพสุนทร", role: "FOUNDER / NextBeyond", image: "/img/peak.png" },
-  { name: "นายศรัณยกร เทพสุนทร", role: "FOUNDER / NextBeyond", image: "/img/peak.png" },
-  { name: "นายศรัณยกร เทพสุนทร", role: "FOUNDER / NextBeyond", image: "/img/peak.png" },
-];
+export default async function Home() {
+  const [COURSES, TEAM] = await Promise.all([getCourses(), getTeamMembers()]);
 
-export default function Home() {
   return (
     <div className="flex min-h-screen flex-col bg-[#f8fbff]">
       <Navbar />
@@ -121,9 +66,9 @@ export default function Home() {
           </div>
 
           <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {COURSES.map((course, index) => (
+            {COURSES.map((course) => (
               <div
-                key={index}
+                key={course.id}
                 className="flex flex-col justify-between rounded-2xl border border-gray-100 bg-white p-6 shadow-sm transition-shadow hover:shadow-md"
               >
                 <div>
@@ -197,9 +142,9 @@ export default function Home() {
           </div>
 
           <div className="mt-12 grid gap-x-6 gap-y-16 sm:grid-cols-2 lg:grid-cols-3">
-            {TEAM.map((member, index) => (
+            {TEAM.map((member) => (
               <div
-                key={index}
+                key={member.id}
                 className="relative flex items-center rounded-2xl bg-white px-6 py-6 shadow-[0_8px_30px_rgb(0,0,0,0.06)] min-h-[110px]"
               >
                 <div className="z-10 w-3/5">

@@ -7,5 +7,165 @@ html {
 }
 
 body {
-  @apply bg-[#f5f8fd] text-slate-800;
+  @apply bg-[#f5f8fd] text-slate-800 dark:bg-slate-900 dark:text-slate-100;
+}
+
+/* ===== SweetAlert2 custom theme (NextBeyond) ===== */
+.swal2-popup.nb-swal-popup {
+  width: 23rem;
+  max-width: 92vw;
+  padding: 2.25rem 1.75rem 1.75rem;
+  border-radius: 28px;
+  font-family: var(--font-noto), system-ui, sans-serif;
+  box-shadow: 0 25px 60px -15px rgba(0, 43, 85, 0.35);
+}
+
+.nb-swal-icon {
+  width: 64px;
+  height: 64px;
+  margin: 0 auto 1rem;
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 10px 25px -8px rgba(0, 43, 85, 0.5);
+}
+
+.nb-swal-icon-danger {
+  background: linear-gradient(135deg, #f43f5e, #9f1239);
+}
+.nb-swal-icon-primary {
+  background: linear-gradient(135deg, #002b55, #0066c4);
+}
+.nb-swal-icon-warning {
+  background: linear-gradient(135deg, #f59e0b, #b45309);
+}
+
+.nb-swal-icon svg {
+  width: 26px;
+  height: 26px;
+  color: #fff;
+}
+
+.nb-swal-title {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: #002b55;
+  text-align: center;
+}
+
+.nb-swal-html {
+  margin: 0.5rem 0 0;
+  font-size: 0.8rem;
+  line-height: 1.55;
+  color: #64748b;
+  text-align: center;
+}
+
+.swal2-popup.nb-swal-popup .swal2-html-container.nb-swal-html-container {
+  margin: 0;
+  padding: 0;
+  overflow: visible;
+}
+
+.swal2-popup.nb-swal-popup .swal2-actions.nb-swal-actions {
+  margin: 1.75rem 0 0;
+  gap: 0.625rem;
+  width: 100%;
+}
+
+.nb-swal-btn {
+  flex: 1;
+  margin: 0 !important;
+  padding: 0.7rem 1rem;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  font-weight: 800;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.15s ease, transform 0.1s ease;
+}
+.nb-swal-btn:active {
+  transform: scale(0.97);
+}
+.nb-swal-btn-confirm {
+  background: #002b55;
+  color: #fff;
+}
+.nb-swal-btn-confirm:hover {
+  background: #004b8d;
+}
+.nb-swal-btn-danger {
+  background: #dc2626;
+  color: #fff;
+}
+.nb-swal-btn-danger:hover {
+  background: #b91c1c;
+}
+.nb-swal-btn-cancel {
+  background: #f1f5f9;
+  color: #475569;
+}
+.nb-swal-btn-cancel:hover {
+  background: #e2e8f0;
+}
+
+/* Toast notifications */
+.swal2-popup.nb-swal-toast {
+  padding: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+.nb-toast {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  min-width: 280px;
+  max-width: 340px;
+  padding: 0.9rem 1.1rem;
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 15px 35px -10px rgba(0, 0, 0, 0.25);
+  border-left: 4px solid;
+  font-family: var(--font-noto), system-ui, sans-serif;
+}
+.nb-toast-success {
+  border-color: #059669;
+}
+.nb-toast-error {
+  border-color: #dc2626;
+}
+.nb-toast-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  flex-shrink: 0;
+  color: #fff;
+}
+.nb-toast-icon svg {
+  width: 11px;
+  height: 11px;
+}
+.nb-toast-success .nb-toast-icon {
+  background: #059669;
+}
+.nb-toast-error .nb-toast-icon {
+  background: #dc2626;
+}
+.nb-toast-title {
+  margin: 0;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #1e293b;
+  text-align: left;
+}
+.nb-toast-text {
+  margin: 0.15rem 0 0;
+  font-size: 0.7rem;
+  color: #64748b;
+  text-align: left;
 }

@@ -1,9 +1,24 @@
 import type { Config } from "tailwindcss";
 
 const config: Config = {
+  darkMode: "class",
   content: [
     "./app/**/*.{js,ts,jsx,tsx,mdx}",
     "./components/**/*.{js,ts,jsx,tsx,mdx}",
+  ],
+  // ค่าสีไล่เฉด (gradient) ของ portfolios/news มาจากข้อมูลใน DB โดยตรง
+  // Tailwind สแกนไม่เจอ class เหล่านี้ในซอร์สโค้ด จึงต้อง safelist ไว้ตายตัว
+  safelist: [
+    "from-blue-600", "to-indigo-800",
+    "from-[#005a9c]", "to-teal-700",
+    "from-orange-500", "to-[#e25a3a]",
+    "from-amber-500", "to-red-600",
+    "from-purple-600", "to-[#003b73]",
+    "from-cyan-600", "to-blue-900",
+    "from-blue-900", "to-indigo-900",
+    "from-emerald-800", "to-teal-900",
+    "from-orange-700", "to-amber-900",
+    "from-rose-800", "to-pink-950",
   ],
   theme: {
     extend: {

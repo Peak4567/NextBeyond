@@ -1,8 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import Link from "next/link";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import { useSiteSettings } from "@/lib/useSiteSettings";
 
 // Font Awesome Integration
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -20,9 +22,31 @@ import {
   faBullhorn,
 } from "@fortawesome/free-solid-svg-icons";
 
+interface HotTopicItem {
+  id: number;
+  title: string;
+  time_label: string;
+  tag: string;
+}
+
+interface NewsArticleItem {
+  id: number;
+  title: string;
+  excerpt: string;
+  category: string;
+  article_date: string;
+  read_time: string;
+  author: string;
+  image_color: string;
+  cover_image: string | null;
+}
+
 export default function NewsPage() {
   const [selectedCat, setSelectedCat] = useState("ทั้งหมด");
   const [activeTab, setActiveTab] = useState("ล่าสุด");
+  const [HOT_TOPICS, setHotTopics] = useState<HotTopicItem[]>([]);
+  const [MAIN_NEWS, setMainNews] = useState<NewsArticleItem[]>([]);
+  const settings = useSiteSettings();
 
   const CATEGORIES = [
     "ทั้งหมด",
@@ -33,54 +57,28 @@ export default function NewsPage() {
     "เทคนิคเตรียมสอบ",
   ];
 
-  const HOT_TOPICS = [
-    { id: 1, title: "ทปอ. ประกาศเกณฑ์ TCAS69 ปรับสัดส่วนคะแนน A-Level วิชาสายวิทย์", time: "10 นาทีที่แล้ว", tag: "HOT" },
-    { id: 2, title: "จุฬาฯ เปิดรับรอบ 1 Portfolio รวมกว่า 80 โครงการ รับ 2,100 ที่นั่ง", time: "1 ชม. ที่แล้ว", tag: "NEW" },
-    { id: 3, title: "มหิดล ปรับเกณฑ์แพทย์ศิริราชฯ เพิ่มสอบสัมภาษณ์แบบ MMI", time: "3 ชม. ที่แล้ว", tag: "UPDATE" },
-  ];
+  useEffect(() => {
+    const controller = new AbortController();
 
-  const MAIN_NEWS = [
-    {
-      id: 1,
-      title: "สรุปครบจบในที่เดียว! ปฏิทินสอบ TGAT/TPAT และ A-Level ประจำปีการศึกษา 2569",
-      excerpt: "เช็กวันเปิดระบบ MyTCAS วันสมัครสอบ และวันประกาศผลสอบอย่างเป็นทางการ พร้อมข้อควรระวังเรื่องการยืนยันสิทธิ์สลักสิทธิ์รอบ Portfolio...",
-      category: "TCAS / ทปอ.",
-      date: "28 ก.ค. 2026",
-      readTime: "4 นาที",
-      author: "ทีมงาน NextBeyond",
-      imageColor: "from-blue-900 to-indigo-900",
-    },
-    {
-      id: 2,
-      title: "ม.เกษตรศาสตร์ ประกาศรับสมัครทุนเรียนฟรีตลอดหลักสูตร 'เพชรนนทรี' ปี 69",
-      excerpt: "เปิดรับสมัครนักเรียน ม.6 ที่มีผลการเรียนดีเยี่ยมและมีผลงานวิชาการยื่นสมัครรับทุนศึกษาต่อระดับปริญญาตรี พร้อมเงินอุดหนุนรายเดือน...",
-      category: "ทุนการศึกษา",
-      date: "27 ก.ค. 2026",
-      readTime: "3 นาที",
-      author: "ข่าวการศึกษา",
-      imageColor: "from-emerald-800 to-teal-900",
-    },
-    {
-      id: 3,
-      title: "เจาะลึกข้อสอบ TPAT3 (ความถนัดวิทยาศาสตร์) บทไหนออกเยอะสุด พร้อมคลังแนวข้อสอบ",
-      excerpt: "วิเคราะห์สถิติข้อสอบย้อนหลัง 3 ปี รวมจุดเน้นฟิสิกส์ เคมี ชีวะ และความคิดเชิงวิทยาศาสตร์ที่น้องๆ ไม่ควรมองข้ามก่อนลงสนามจริง...",
-      category: "เทคนิคเตรียมสอบ",
-      date: "26 ก.ค. 2026",
-      readTime: "6 นาที",
-      author: "Tutor Peak",
-      imageColor: "from-orange-700 to-amber-900",
-    },
-    {
-      id: 4,
-      title: "มธ. ประกาศขยายที่นั่งรอบ 3 Admission คณะพาณิชยศาสตร์และการบัญชี เพิ่ม 15%",
-      excerpt: "ข่าวดีสำหรับ Dek69 ที่ต้องการเข้าเรียนคณะบัญชี มธ. เพิ่มจำนวนรับรวมกว่า 150 ที่นั่งในรอบ Admission พร้อมแจกสถิติคะแนนขั้นต่ำ...",
-      category: "ประกาศรับสมัคร",
-      date: "25 ก.ค. 2026",
-      readTime: "2 นาที",
-      author: "ข่าวการศึกษา",
-      imageColor: "from-rose-800 to-pink-950",
-    },
-  ];
+    async function loadNewsContent() {
+      try {
+        const response = await fetch("/api/content/news", { signal: controller.signal });
+        if (!response.ok) throw new Error("Unable to load news content");
+
+        const data = await response.json();
+        setHotTopics(data.hotTopics);
+        setMainNews(data.mainNews);
+      } catch (error) {
+        if ((error as Error).name !== "AbortError") {
+          setHotTopics([]);
+          setMainNews([]);
+        }
+      }
+    }
+
+    loadNewsContent();
+    return () => controller.abort();
+  }, []);
 
   return (
     <div className="flex min-h-screen flex-col bg-[#f4f7fb]">
@@ -94,7 +92,8 @@ export default function NewsPage() {
               <FontAwesomeIcon icon={faBullhorn} /> LIVE NEWS
             </span>
             <p className="truncate text-gray-300">
-              [TCAS69 Update] ระบบ MyTCAS เตรียมเปิดลงทะเบียน 28 ต.ค. นี้ • เช็กเกณฑ์พอร์ตแพทย์ศิริราชฯ ล่าสุด • ม.เกษตรแจกทุนเรียนฟรี 100%
+              {settings?.live_news_ticker ||
+                "[TCAS70 Update] ระบบ MyTCAS เตรียมเปิดลงทะเบียน 28 ต.ค. นี้ • เช็กเกณฑ์พอร์ตแพทย์ศิริราชฯ ล่าสุด • ม.เกษตรแจกทุนเรียนฟรี 100%"}
             </p>
           </div>
           <span className="hidden sm:inline-block shrink-0 text-gray-400 text-[11px]">
@@ -119,10 +118,10 @@ export default function NewsPage() {
 
             <div className="my-8">
               <span className="text-xs font-bold text-blue-200 uppercase tracking-widest">
-                TCAS69 / OFFICIAL ANNOUNCEMENT
+                TCAS70 / OFFICIAL ANNOUNCEMENT
               </span>
               <h1 className="mt-2 text-2xl font-black leading-tight sm:text-3xl lg:text-4xl text-white">
-                ทปอ. ประกาศปฏิทินสอบ TCAS69 ยืนยันสอบ TGAT/TPAT ธันวาคมนี้!
+                ทปอ. ประกาศปฏิทินสอบ TCAS70 ยืนยันสอบ TGAT/TPAT ธันวาคมนี้!
               </h1>
               <p className="mt-3 text-xs text-blue-100 sm:text-sm line-clamp-2 leading-relaxed opacity-90">
                 สรุปกำหนดการสำคัญสำหรับนักเรียน ม.6 ทั้งวันเปิดลงทะเบียน MyTCAS, วันยื่นพอร์ตโฟลิโอรอบ 1, วันสอบ TGAT/TPAT และวันสอบ A-Level ครบถ้วนในที่เดียว
@@ -160,7 +159,7 @@ export default function NewsPage() {
                       }`}>
                         {item.tag}
                       </span>
-                      <span className="text-[10px] text-gray-400">{item.time}</span>
+                      <span className="text-[10px] text-gray-400">{item.time_label}</span>
                     </div>
                     <h4 className="mt-1 text-xs font-bold text-gray-800 group-hover:text-[#004b8d] transition-colors leading-snug">
                       {item.title}
@@ -226,20 +225,27 @@ export default function NewsPage() {
                 className="group flex flex-col sm:flex-row gap-5 rounded-3xl border border-gray-200 bg-white p-5 shadow-sm transition-all hover:border-blue-300 hover:shadow-md"
               >
                 {/* Thumb Image */}
-                <div className={`h-44 sm:h-auto sm:w-52 shrink-0 rounded-2xl bg-gradient-to-br ${news.imageColor} p-4 text-white flex flex-col justify-between shadow-inner`}>
-                  <span className="self-start rounded-md bg-black/40 px-2 py-0.5 text-[10px] font-bold backdrop-blur-sm">
+                <div
+                  className={`relative h-44 sm:h-auto sm:w-52 shrink-0 overflow-hidden rounded-2xl p-4 text-white flex flex-col justify-between shadow-inner ${
+                    news.cover_image ? "" : `bg-gradient-to-br ${news.image_color}`
+                  }`}
+                >
+                  {news.cover_image && (
+                    <img src={news.cover_image} alt="" className="absolute inset-0 h-full w-full object-cover" />
+                  )}
+                  <span className="relative z-10 self-start rounded-md bg-black/40 px-2 py-0.5 text-[10px] font-bold backdrop-blur-sm">
                     {news.category}
                   </span>
-                  <span className="text-[10px] text-white/80 font-semibold">NextBeyond News</span>
+                  <span className="relative z-10 text-[10px] text-white/80 font-semibold">NextBeyond News</span>
                 </div>
 
                 {/* Content Details */}
                 <div className="flex flex-1 flex-col justify-between">
                   <div>
                     <div className="flex items-center gap-3 text-[11px] text-gray-400">
-                      <span><FontAwesomeIcon icon={faCalendarDays} className="mr-1" /> {news.date}</span>
+                      <span><FontAwesomeIcon icon={faCalendarDays} className="mr-1" /> {news.article_date}</span>
                       <span>•</span>
-                      <span><FontAwesomeIcon icon={faClock} className="mr-1" /> {news.readTime}</span>
+                      <span><FontAwesomeIcon icon={faClock} className="mr-1" /> {news.read_time}</span>
                       <span>•</span>
                       <span><FontAwesomeIcon icon={faUser} className="mr-1" /> {news.author}</span>
                     </div>
@@ -254,9 +260,9 @@ export default function NewsPage() {
                   </div>
 
                   <div className="mt-4 flex items-center justify-between border-t border-gray-100 pt-3">
-                    <span className="text-xs font-bold text-[#004b8d] group-hover:underline flex items-center gap-1.5">
+                    <Link href={`/news/${news.id}`} className="text-xs font-bold text-[#004b8d] group-hover:underline flex items-center gap-1.5">
                       อ่านต่อรายละเอียด <FontAwesomeIcon icon={faArrowRight} />
-                    </span>
+                    </Link>
                     <button className="text-gray-400 hover:text-blue-600 text-xs flex items-center gap-1">
                       <FontAwesomeIcon icon={faBookmark} /> บันทึกข่าว
                     </button>
@@ -288,7 +294,7 @@ export default function NewsPage() {
             {/* Widget 1: ปฏิทินวันสำคัญนับถอยหลัง */}
             <div className="rounded-3xl border border-gray-200 bg-white p-6 shadow-sm">
               <h3 className="text-sm font-black text-[#002b55] uppercase tracking-wider mb-4 border-b border-gray-100 pb-2 flex items-center gap-2">
-                <FontAwesomeIcon icon={faCalendarDays} className="text-blue-600" /> นับถอยหลังวันสอบ TCAS69
+                <FontAwesomeIcon icon={faCalendarDays} className="text-blue-600" /> นับถอยหลังวันสอบ TCAS70
               </h3>
 
               <div className="space-y-3">

@@ -1,12 +1,45 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 
+interface PortfolioItem {
+  id: number;
+  title: string;
+  student_name: string;
+  school: string;
+  faculty: string;
+  university: string;
+  views: string;
+  likes: number;
+  page_count: number;
+  tags: string;
+  cover_bg: string;
+  cover_image: string | null;
+}
+
+interface DiscussionItem {
+  id: number;
+  title: string;
+  author: string;
+  replies: number;
+  time_label: string;
+}
+
 export default function CommunityPage() {
+  const router = useRouter();
   const [selectedFaculty, setSelectedFaculty] = useState("ทั้งหมด");
   const [searchQuery, setSearchQuery] = useState("");
+  const [PORTFOLIOS, setPortfolios] = useState<PortfolioItem[]>([]);
+  const [DISCUSSIONS, setDiscussions] = useState<DiscussionItem[]>([]);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [showThreadForm, setShowThreadForm] = useState(false);
+  const [threadTitle, setThreadTitle] = useState("");
+  const [threadError, setThreadError] = useState("");
+  const [postingThread, setPostingThread] = useState(false);
 
   const FACULTIES = [
     "ทั้งหมด",
@@ -18,92 +51,62 @@ export default function CommunityPage() {
     "วิทยาศาสตร์",
   ];
 
-  const PORTFOLIOS = [
-    {
-      id: 1,
-      title: "Portfolio ติดวิศวะ คอมฯ จุฬาฯ รอบ 1",
-      student: "นายศรัณยกร เทพสุนทร",
-      school: "โรงเรียนเตรียมอุดมศึกษา",
-      faculty: "วิศวกรรมศาสตร์",
-      university: "จุฬาลงกรณ์มหาวิทยาลัย",
-      views: "2.4k",
-      likes: 342,
-      pageCount: 10,
-      tags: ["Software", "Robot Project", "GPAX 3.95"],
-      coverBg: "from-blue-600 to-indigo-800",
-    },
-    {
-      id: 2,
-      title: "พอร์ตสายแพทย์ มหิดล ผลงานจิตอาสาแน่นๆ",
-      student: "นางสาวกัญญาณัฐ ศรีสุข",
-      school: "โรงเรียนบดินทรเดชา",
-      faculty: "แพทยศาสตร์",
-      university: "มหาวิทยาลัยมหิดล",
-      views: "4.1k",
-      likes: 512,
-      pageCount: 10,
-      tags: ["วิจัยชีววิทยา", "สอวน.", "GPAX 4.00"],
-      coverBg: "from-[#005a9c] to-teal-700",
-    },
-    {
-      id: 3,
-      title: "Portfolio สถาปัตย์ เกษตรศาสตร์ สายวาดอาร์ต",
-      student: "นายภานุพงศ์ พงษ์ธนา",
-      school: "โรงเรียนสวนกุหลาบวิทยาลัย",
-      faculty: "สถาปัตยกรรมศาสตร์",
-      university: "มหาวิทยาลัยเกษตรศาสตร์",
-      views: "1.8k",
-      likes: 210,
-      pageCount: 10,
-      tags: ["3D Model", "Sketch Design", "GPAX 3.75"],
-      coverBg: "from-orange-500 to-[#e25a3a]",
-    },
-    {
-      id: 4,
-      title: "พอร์ตบริหารธุรกิจ ธรรมศาสตร์ (BBA)",
-      student: "นายอัครวินท์ ชัยมงคล",
-      school: "โรงเรียนสาธิต มศว",
-      faculty: "บริหารธุรกิจ",
-      university: "มหาวิทยาลัยธรรมศาสตร์",
-      views: "1.2k",
-      likes: 189,
-      pageCount: 10,
-      tags: ["Startup Competition", "IELTS 7.5"],
-      coverBg: "from-amber-500 to-red-600",
-    },
-    {
-      id: 5,
-      title: "นิเทศฯ จุฬาฯ ผลงานกำกับหนังสั้น & ตัดต่อ",
-      student: "นางสาวจิรัชญา แสนดี",
-      school: "โรงเรียนมาแตร์เดอีวิทยาลัย",
-      faculty: "นิเทศศาสตร์",
-      university: "จุฬาลงกรณ์มหาวิทยาลัย",
-      views: "3.5k",
-      likes: 420,
-      pageCount: 10,
-      tags: ["Short Film", "Short Film Director"],
-      coverBg: "from-purple-600 to-[#003b73]",
-    },
-    {
-      id: 6,
-      title: "พอร์ต Data Science ลาดกระบัง โครงการ AI",
-      student: "นายธนกฤต อินทร์แก้ว",
-      school: "โรงเรียนมหิดลวิทยานุสรณ์",
-      faculty: "วิทยาศาสตร์",
-      university: "สถาบันเทคโนโลยีพระจอมเกล้าฯ",
-      views: "980",
-      likes: 145,
-      pageCount: 10,
-      tags: ["Python", "Machine Learning"],
-      coverBg: "from-cyan-600 to-blue-900",
-    },
-  ];
+  useEffect(() => {
+    const controller = new AbortController();
 
-  const DISCUSSIONS = [
-    { title: "ใส่เกียรติบัตรออนไลน์ Coursera มหาลัยรับไหมครับ?", author: "เด็ก68อยากติดหมอ", replies: 14, time: "10 นาทีที่แล้ว" },
-    { title: "แจกพิกัดเว็บดึงสวอตช์สีทำพอร์ตสไตล์มินิมอลฟรี!", author: "PortfolioMaker", replies: 32, time: "1 ชม. ที่แล้ว" },
-    { title: "หน้าโครงสร้างความสามารถพิเศษควรใส่กี่เปอร์เซ็นต์ดี?", author: "DekCom68", replies: 8, time: "3 ชม. ที่แล้ว" },
-  ];
+    async function loadCommunityContent() {
+      try {
+        const response = await fetch("/api/content/community", { signal: controller.signal });
+        if (!response.ok) throw new Error("Unable to load community content");
+
+        const data = await response.json();
+        setPortfolios(data.portfolios);
+        setDiscussions(data.discussions);
+      } catch (error) {
+        if ((error as Error).name !== "AbortError") {
+          setPortfolios([]);
+          setDiscussions([]);
+        }
+      }
+    }
+
+    loadCommunityContent();
+    fetch("/api/auth/me")
+      .then((res) => res.json())
+      .then((data) => setIsLoggedIn(Boolean(data.user)))
+      .catch(() => setIsLoggedIn(false));
+
+    return () => controller.abort();
+  }, []);
+
+  async function handleCreateThread(e: React.FormEvent) {
+    e.preventDefault();
+    if (!isLoggedIn) {
+      router.push("/login");
+      return;
+    }
+    if (!threadTitle.trim()) return;
+
+    setPostingThread(true);
+    setThreadError("");
+    const res = await fetch("/api/community/discussions", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ title: threadTitle }),
+    });
+    const data = await res.json();
+
+    if (!res.ok) {
+      setThreadError(data.error || "ตั้งกระทู้ไม่สำเร็จ");
+    } else {
+      setDiscussions(data.discussions);
+      setThreadTitle("");
+      setShowThreadForm(false);
+    }
+    setPostingThread(false);
+  }
+
+  const topPortfolios = [...PORTFOLIOS].sort((a, b) => b.likes - a.likes).slice(0, 3);
 
   return (
     <div className="flex min-h-screen flex-col bg-[#f8fbff]">
@@ -125,12 +128,15 @@ export default function CommunityPage() {
             </p>
           </div>
 
-          <button className="flex items-center justify-center gap-2 rounded-xl bg-[#005a9c] px-5 py-3 text-sm font-bold text-white shadow-md transition-all hover:bg-[#003b73]">
+          <Link
+            href="/profile"
+            className="flex items-center justify-center gap-2 rounded-xl bg-[#005a9c] px-5 py-3 text-sm font-bold text-white shadow-md transition-all hover:bg-[#003b73]"
+          >
             <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
             </svg>
             อัปโหลดเล่มของคุณ
-          </button>
+          </Link>
         </div>
 
         {/* --- BANNER NEW FEATURE: TCASFolio --- */}
@@ -215,12 +221,23 @@ export default function CommunityPage() {
               {PORTFOLIOS.map((item) => (
                 <div key={item.id} className="group flex flex-col justify-between overflow-hidden rounded-2xl border border-gray-100 bg-white p-4 shadow-sm transition-all hover:-translate-y-1 hover:shadow-md">
                   <div>
-                    {/* Mock Cover Preview */}
-                    <div className={`relative flex h-40 w-full items-end rounded-xl bg-gradient-to-br ${item.coverBg} p-4 text-white shadow-inner`}>
-                      <span className="absolute top-3 right-3 rounded-md bg-black/40 px-2 py-0.5 text-[10px] font-medium backdrop-blur-sm">
-                        {item.pageCount} หน้า (PDF)
+                    {/* Cover Preview */}
+                    <div
+                      className={`relative flex h-40 w-full items-end overflow-hidden rounded-xl p-4 text-white shadow-inner ${
+                        item.cover_image ? "" : `bg-gradient-to-br ${item.cover_bg}`
+                      }`}
+                    >
+                      {item.cover_image && (
+                        <img
+                          src={item.cover_image}
+                          alt=""
+                          className="absolute inset-0 h-full w-full object-cover"
+                        />
+                      )}
+                      <span className="absolute top-3 right-3 z-10 rounded-md bg-black/40 px-2 py-0.5 text-[10px] font-medium backdrop-blur-sm">
+                        {item.page_count} หน้า (PDF)
                       </span>
-                      <div>
+                      <div className="relative z-10">
                         <span className="text-[10px] font-bold text-white/80 uppercase">{item.university}</span>
                         <h4 className="text-xs font-extrabold line-clamp-1">{item.faculty}</h4>
                       </div>
@@ -232,12 +249,12 @@ export default function CommunityPage() {
                         {item.title}
                       </h3>
                       <p className="text-[11px] font-semibold text-gray-500 mt-0.5">
-                        {item.student} • <span className="text-gray-400 font-normal">{item.school}</span>
+                        {item.student_name} • <span className="text-gray-400 font-normal">{item.school}</span>
                       </p>
 
                       {/* Tags */}
                       <div className="mt-2.5 flex flex-wrap gap-1.5">
-                        {item.tags.map((tag, i) => (
+                        {item.tags.split(",").map((tag, i) => (
                           <span key={i} className="rounded-md bg-blue-50 px-2 py-0.5 text-[10px] font-medium text-blue-600">
                             #{tag}
                           </span>
@@ -256,9 +273,9 @@ export default function CommunityPage() {
                         ❤️ {item.likes}
                       </span>
                     </div>
-                    <button className="font-bold text-[#005a9c] hover:underline">
+                    <Link href={`/community-students/${item.id}`} className="font-bold text-[#005a9c] hover:underline">
                       เปิดดูเล่ม ➔
-                    </button>
+                    </Link>
                   </div>
                 </div>
               ))}
@@ -280,8 +297,12 @@ export default function CommunityPage() {
               </div>
 
               <div className="mt-3 space-y-3">
-                {PORTFOLIOS.slice(0, 3).map((item, index) => (
-                  <div key={item.id} className="flex items-center gap-3 rounded-xl p-2 hover:bg-gray-50">
+                {topPortfolios.map((item, index) => (
+                  <Link
+                    href={`/community-students/${item.id}`}
+                    key={item.id}
+                    className="flex items-center gap-3 rounded-xl p-2 hover:bg-gray-50"
+                  >
                     <span className={`flex h-6 w-6 items-center justify-center rounded-lg text-xs font-black ${
                       index === 0 ? "bg-amber-100 text-amber-700" : index === 1 ? "bg-gray-200 text-gray-700" : "bg-orange-100 text-orange-700"
                     }`}>
@@ -289,10 +310,10 @@ export default function CommunityPage() {
                     </span>
                     <div className="flex-1 overflow-hidden">
                       <h4 className="text-xs font-bold text-gray-800 truncate">{item.title}</h4>
-                      <p className="text-[10px] text-gray-400">{item.student}</p>
+                      <p className="text-[10px] text-gray-400">{item.student_name}</p>
                     </div>
                     <span className="text-[10px] font-bold text-rose-500">❤️ {item.likes}</span>
-                  </div>
+                  </Link>
                 ))}
               </div>
             </div>
@@ -301,18 +322,43 @@ export default function CommunityPage() {
             <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
               <div className="flex items-center justify-between border-b border-gray-100 pb-3">
                 <h3 className="text-sm font-bold text-[#003b73]">💬 พูดคุยเรื่อง Portfolio</h3>
-                <a href="#" className="text-[11px] text-blue-600 hover:underline">ตั้งกระทู้</a>
+                <button
+                  onClick={() => setShowThreadForm((prev) => !prev)}
+                  className="text-[11px] font-semibold text-blue-600 hover:underline"
+                >
+                  {showThreadForm ? "ยกเลิก" : "ตั้งกระทู้"}
+                </button>
               </div>
 
+              {showThreadForm && (
+                <form onSubmit={handleCreateThread} className="mt-3 space-y-2 border-b border-gray-100 pb-3">
+                  <input
+                    type="text"
+                    value={threadTitle}
+                    onChange={(e) => setThreadTitle(e.target.value)}
+                    placeholder={isLoggedIn ? "หัวข้อกระทู้ของคุณ..." : "เข้าสู่ระบบเพื่อตั้งกระทู้"}
+                    className="w-full rounded-xl border border-gray-200 bg-gray-50/50 px-3.5 py-2.5 text-xs text-gray-800 outline-none focus:border-blue-500 focus:bg-white"
+                  />
+                  {threadError && <p className="text-[11px] font-semibold text-red-600">{threadError}</p>}
+                  <button
+                    type="submit"
+                    disabled={postingThread}
+                    className="w-full rounded-xl bg-[#005a9c] py-2 text-xs font-bold text-white hover:bg-[#003b73] disabled:opacity-60"
+                  >
+                    {postingThread ? "กำลังตั้งกระทู้..." : "ตั้งกระทู้"}
+                  </button>
+                </form>
+              )}
+
               <div className="mt-3 space-y-3">
-                {DISCUSSIONS.map((topic, index) => (
-                  <div key={index} className="border-b border-gray-50 pb-2.5 last:border-0 last:pb-0">
+                {DISCUSSIONS.map((topic) => (
+                  <div key={topic.id} className="border-b border-gray-50 pb-2.5 last:border-0 last:pb-0">
                     <h4 className="text-xs font-bold text-gray-700 hover:text-blue-600 cursor-pointer line-clamp-1">
                       {topic.title}
                     </h4>
                     <div className="mt-1 flex items-center justify-between text-[10px] text-gray-400">
                       <span>โดย {topic.author}</span>
-                      <span>💬 {topic.replies} ตอบ • {topic.time}</span>
+                      <span>💬 {topic.replies} ตอบ • {topic.time_label}</span>
                     </div>
                   </div>
                 ))}
