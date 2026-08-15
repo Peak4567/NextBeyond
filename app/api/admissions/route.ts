@@ -12,14 +12,41 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const q = searchParams.get("q")?.trim() || undefined;
   const round = searchParams.get("round")?.trim() || undefined;
+  const universityId = searchParams.get("universityId")?.trim() || undefined;
+  const requestedLimit = Number(searchParams.get("limit"));
+  const limit = Number.isFinite(requestedLimit) && requestedLimit > 0
+    ? Math.min(requestedLimit, 500)
+    : 50;
 
   const [{ items, total }, settings] = await Promise.all([
-    getAdmissionCriteria({ q, round, limit: 50 }),
+    getAdmissionCriteria({ q, round, universityId, limit }),
     getSettings(),
   ]);
 
+  const criteria = items.map((item) => ({
+    ...item,
+    scoreBreakdown: item.scoreBreakdown
+      ? (JSON.parse(item.scoreBreakdown) as { key: string; label: string; weight: number }[])
+      : [],
+    details: item.detailsJson
+      ? (JSON.parse(item.detailsJson) as {
+          description: string | null;
+          condition: string | null;
+          openDateShort: string | null;
+          openDateNote: string | null;
+          closedDate: string | null;
+          interviewDate: string | null;
+          interviewTime: string | null;
+          interviewLocation: string | null;
+          minGpaBreakdown: { label: string; value: string }[];
+          physicalRequirements: { label: string; value: string }[];
+        })
+      : null,
+    isCustomPortal: Boolean(item.sourceIsCustom),
+  }));
+
   return NextResponse.json({
-    criteria: items,
+    criteria,
     total,
     source: {
       name: "TCAS70 (mytcas.com)",

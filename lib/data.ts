@@ -5,15 +5,19 @@ export interface AdmissionCriteria extends RowDataPacket {
   id: number;
   academicYear: string;
   university: string;
+  universityId: string | null;
   faculty: string;
   major: string;
   round: string;
   roundName: string;
   quota: number;
   gpaxMin: string;
+  scoreBreakdown: string | null;
+  detailsJson: string | null;
   criteria: string;
   sourceUrl: string;
   sourceLabel: string;
+  sourceIsCustom: number;
   verifiedAt: string;
 }
 
@@ -122,11 +126,12 @@ export interface ExamBankItem extends RowDataPacket {
 export interface AdmissionCriteriaQuery {
   q?: string;
   round?: string;
+  universityId?: string;
   limit?: number;
 }
 
 export async function getAdmissionCriteria(params: AdmissionCriteriaQuery = {}) {
-  const { q, round, limit = 50 } = params;
+  const { q, round, universityId, limit = 50 } = params;
 
   const conditions: string[] = [];
   const values: (string | number)[] = [];
@@ -140,6 +145,10 @@ export async function getAdmissionCriteria(params: AdmissionCriteriaQuery = {}) 
     conditions.push("round = ?");
     values.push(round);
   }
+  if (universityId) {
+    conditions.push("university_id = ?");
+    values.push(universityId);
+  }
 
   const whereClause = conditions.length ? `WHERE ${conditions.join(" AND ")}` : "";
 
@@ -150,14 +159,45 @@ export async function getAdmissionCriteria(params: AdmissionCriteriaQuery = {}) 
   const total = countRows[0]?.total ?? 0;
 
   const [rows] = await pool.query<AdmissionCriteria[]>(
-    `SELECT id, academic_year AS academicYear, university, faculty, major, round,
-            round_name AS roundName, quota, gpax_min AS gpaxMin, criteria,
-            source_url AS sourceUrl, source_label AS sourceLabel, verified_at AS verifiedAt
-     FROM admission_criteria ${whereClause} ORDER BY sort_order, id LIMIT ?`,
+    `SELECT id, academic_year AS academicYear, university, university_id AS universityId, faculty, major, round,
+            round_name AS roundName, quota, gpax_min AS gpaxMin, score_breakdown AS scoreBreakdown,
+            details_json AS detailsJson, criteria,
+            source_url AS sourceUrl, source_label AS sourceLabel, source_is_custom AS sourceIsCustom,
+            verified_at AS verifiedAt
+     FROM admission_criteria ${whereClause} ORDER BY university, quota DESC LIMIT ?`,
     [...values, limit]
   );
 
   return { items: rows, total };
+}
+
+export interface UniversitySummary extends RowDataPacket {
+  universityId: string | null;
+  university: string;
+  programCount: number;
+}
+
+export async function getUniversitiesList() {
+  const [rows] = await pool.query<UniversitySummary[]>(
+    `SELECT university_id AS universityId, university, COUNT(*) AS programCount
+     FROM admission_criteria
+     WHERE university_id IS NOT NULL
+     GROUP BY university_id, university
+     ORDER BY university`
+  );
+  return rows;
+}
+
+export async function getUniversityInfo(universityId: string) {
+  const [rows] = await pool.query<UniversitySummary[]>(
+    `SELECT university_id AS universityId, university, COUNT(*) AS programCount
+     FROM admission_criteria
+     WHERE university_id = ?
+     GROUP BY university_id, university
+     LIMIT 1`,
+    [universityId]
+  );
+  return rows[0] ?? null;
 }
 
 export async function getCourses() {

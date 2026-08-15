@@ -10,6 +10,7 @@ import {
   faCalendarDays,
   faListCheck,
   faBoxArchive,
+  faLink,
 } from "@fortawesome/free-solid-svg-icons";
 
 export interface ResourceField {
@@ -212,6 +213,19 @@ export const ADMIN_RESOURCES: Record<string, ResourceConfig> = {
           { value: "orange", label: "ส้ม" },
         ],
       },
+    ],
+  },
+  portal_overrides: {
+    table: "university_portal_overrides",
+    label: "ระบบรับสมัครเฉพาะของมหาวิทยาลัย",
+    description:
+      "ลิงก์ระบบสมัครเฉพาะของแต่ละมหาวิทยาลัย (เช่น iFolio ของ สจล.) ใช้แทนลิงก์ทั่วไปจาก TCAS เมื่อชื่อมหาวิทยาลัยตรงกับคำค้นหา — ใส่เฉพาะลิงก์ที่ตรวจสอบแล้วว่าถูกต้องจริงเท่านั้น",
+    icon: faLink,
+    fields: [
+      { key: "university_keyword", label: "คำค้นหาในชื่อมหาวิทยาลัย (เช่น พระจอมเกล้าเจ้าคุณทหารลาดกระบัง)" },
+      { key: "portal_label", label: "ชื่อระบบ (เช่น iFolio (สจล.))" },
+      { key: "portal_url", label: "ลิงก์ระบบ (ตรวจสอบแล้วเท่านั้น)" },
+      { key: "notes", label: "หมายเหตุ (ไม่บังคับ)", type: "textarea" },
     ],
   },
 };

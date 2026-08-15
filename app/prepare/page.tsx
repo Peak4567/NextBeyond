@@ -1,8 +1,15 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faListCheck, faBuildingColumns } from "@fortawesome/free-solid-svg-icons";
+import AdmissionDetailModal, {
+  type AdmissionDetails,
+  type ScoreBadge,
+} from "@/components/AdmissionDetailModal";
 
 interface AdmissionCriteriaItem {
   id: number;
@@ -14,11 +21,22 @@ interface AdmissionCriteriaItem {
   roundName: string;
   quota: number;
   gpaxMin: string;
+  scoreBreakdown: ScoreBadge[];
+  details: AdmissionDetails | null;
   criteria: string;
   sourceUrl: string;
   sourceLabel: string;
+  isCustomPortal: boolean;
   verifiedAt: string;
 }
+
+const ROUND_TABS = [
+  { value: "", label: "ทุกรอบ" },
+  { value: "1", label: "รอบ 1 Portfolio" },
+  { value: "2", label: "รอบ 2 Quota" },
+  { value: "3", label: "รอบ 3 Admission" },
+  { value: "4", label: "รอบ 4 Direct Admission" },
+];
 
 interface AdmissionApiResponse {
   criteria: AdmissionCriteriaItem[];
@@ -59,6 +77,7 @@ export default function PreparePage() {
   const [selectedRound, setSelectedRound] = useState("");
   const [criteria, setCriteria] = useState<AdmissionCriteriaItem[]>([]);
   const [criteriaTotal, setCriteriaTotal] = useState(0);
+  const [selectedCriteria, setSelectedCriteria] = useState<AdmissionCriteriaItem | null>(null);
   const [isLoadingCriteria, setIsLoadingCriteria] = useState(true);
   const [sourceStatus, setSourceStatus] = useState<AdmissionApiResponse["source"] | null>(null);
   const [checklist, setChecklist] = useState<ChecklistItemState[]>([]);
@@ -77,8 +96,6 @@ export default function PreparePage() {
     "นิเทศศาสตร์",
     "วิทยาการข้อมูล",
   ];
-
-  const hasActiveQuery = searchTerm.trim() !== "" || selectedRound !== "";
 
   useEffect(() => {
     const controller = new AbortController();
@@ -181,15 +198,24 @@ export default function PreparePage() {
 
             {/* 1. ค้นหาเกณฑ์การรับสมัคร TCAS */}
             <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
-              <div className="flex items-center gap-2 text-base font-bold text-[#003b73]">
-                <svg className="h-5 w-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
-                <span>ค้นหาเกณฑ์การรับสมัคร TCAS70</span>
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div className="flex items-center gap-2 text-base font-bold text-[#003b73]">
+                  <svg className="h-5 w-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                  <span>ค้นหาเกณฑ์การรับสมัคร TCAS70</span>
+                </div>
+                <Link
+                  href="/prepare/universities"
+                  className="flex items-center gap-1.5 rounded-xl bg-blue-50 px-3 py-1.5 text-[11px] font-bold text-[#003b73] transition-colors hover:bg-blue-100"
+                >
+                  <FontAwesomeIcon icon={faBuildingColumns} />
+                  เลือกดูตามมหาวิทยาลัย
+                </Link>
               </div>
 
-              <div className="mt-4 flex flex-col gap-3 sm:flex-row">
-                <div className="relative flex-1">
+              <div className="mt-4">
+                <div className="relative">
                   <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
                     <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -211,18 +237,23 @@ export default function PreparePage() {
                     </button>
                   )}
                 </div>
+              </div>
 
-                <select
-                  value={selectedRound}
-                  onChange={(e) => setSelectedRound(e.target.value)}
-                  className="rounded-xl border border-gray-200 bg-gray-50/50 px-4 py-2.5 text-xs text-gray-600 outline-none focus:border-blue-500"
-                >
-                  <option value="">เลือกทุกรอบ (TCAS 1-4)</option>
-                  <option value="1">รอบ 1 Portfolio</option>
-                  <option value="2">รอบ 2 Quota</option>
-                  <option value="3">รอบ 3 Admission</option>
-                  <option value="4">รอบ 4 Direct Admission</option>
-                </select>
+              {/* ปุ่มแยกตามรอบ TCAS */}
+              <div className="mt-3 flex flex-wrap gap-2">
+                {ROUND_TABS.map((tab) => (
+                  <button
+                    key={tab.value}
+                    onClick={() => setSelectedRound(tab.value)}
+                    className={`rounded-xl px-3.5 py-2 text-xs font-bold transition-all ${
+                      selectedRound === tab.value
+                        ? "bg-[#003b73] text-white shadow-md"
+                        : "bg-gray-100 text-gray-600 hover:bg-blue-50 hover:text-[#003b73]"
+                    }`}
+                  >
+                    {tab.label}
+                  </button>
+                ))}
               </div>
 
               <div className="mt-3 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-emerald-100 bg-emerald-50 px-3 py-2 text-[11px] text-emerald-800">
@@ -258,15 +289,7 @@ export default function PreparePage() {
 
               {/* Display Filtered Results */}
               <div className="mt-5 space-y-3">
-                {!hasActiveQuery ? (
-                  <div className="rounded-xl border border-dashed border-gray-200 p-8 text-center text-xs text-gray-400">
-                    พิมพ์คำค้นหาหรือกดแท็กด้านบน เพื่อค้นหาเกณฑ์การรับสมัครจากทั้งหมด{" "}
-                    <strong className="text-gray-600">
-                      {sourceStatus ? sourceStatus.syncedCount.toLocaleString("th-TH") : "…"}
-                    </strong>{" "}
-                    รายการทั่วประเทศ
-                  </div>
-                ) : isLoadingCriteria ? (
+                {isLoadingCriteria ? (
                   <div className="rounded-xl border border-dashed border-gray-200 p-8 text-center text-xs text-gray-400">
                     กำลังค้นหาเกณฑ์การรับสมัครจากแหล่งข้อมูลทางการ...
                   </div>
@@ -285,9 +308,16 @@ export default function PreparePage() {
                           <span className="text-[11px] font-extrabold text-[#005a9c]">
                             {item.university}
                           </span>
-                          <span className="rounded-full bg-orange-100 px-2.5 py-0.5 text-[10px] font-bold text-orange-600">
-                            {item.roundName}
-                          </span>
+                          <div className="flex items-center gap-1.5">
+                            {item.isCustomPortal && (
+                              <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-bold text-emerald-700">
+                                {item.sourceLabel}
+                              </span>
+                            )}
+                            <span className="rounded-full bg-orange-100 px-2.5 py-0.5 text-[10px] font-bold text-orange-600">
+                              {item.roundName}
+                            </span>
+                          </div>
                         </div>
                         <h4 className="mt-1 text-xs font-bold text-gray-800">
                           {item.faculty} - {item.major}
@@ -296,20 +326,46 @@ export default function PreparePage() {
                           <span>จำนวนรับ: <strong className="text-gray-700">{item.quota} คน</strong></span>
                           <span>GPAX ขั้นต่ำ: <strong className="text-gray-700">{item.gpaxMin}</strong></span>
                         </div>
-                        <div className="mt-2 rounded-lg bg-white p-2.5 text-[11px] text-gray-600 border border-gray-100">
-                          <strong className="text-blue-700">เกณฑ์การคัดเลือก: </strong>
-                          {item.criteria}
+                        {item.details?.openDateShort && (
+                          <p className="mt-1.5 text-[11px] text-emerald-700">
+                            <strong>เปิดรับสมัคร:</strong> {item.details.openDateShort}
+                            {item.details.closedDate && ` — ปิดรับสมัคร ${item.details.closedDate}`}
+                          </p>
+                        )}
+
+                        {/* สรุปคะแนนที่ต้องใช้ — badge อ่านง่าย ไม่ต้องอ่านข้อความยาว */}
+                        <div className="mt-2 rounded-lg bg-white p-2.5 border border-gray-100">
+                          <p className="mb-1.5 text-[11px] font-bold text-blue-700">ต้องใช้คะแนนอะไรบ้าง:</p>
+                          {item.scoreBreakdown.length > 0 ? (
+                            <div className="flex flex-wrap gap-1.5">
+                              {item.scoreBreakdown.slice(0, 4).map((badge) => (
+                                <span
+                                  key={badge.key}
+                                  className="rounded-md bg-blue-50 px-2 py-1 text-[10px] font-bold text-[#003b73]"
+                                >
+                                  {badge.label} <span className="text-blue-500">{badge.weight}%</span>
+                                </span>
+                              ))}
+                              {item.scoreBreakdown.length > 4 && (
+                                <span className="rounded-md bg-gray-50 px-2 py-1 text-[10px] font-bold text-gray-400">
+                                  +{item.scoreBreakdown.length - 4}
+                                </span>
+                              )}
+                            </div>
+                          ) : (
+                            <p className="text-[11px] text-gray-500">{item.criteria}</p>
+                          )}
                         </div>
+
                         <div className="mt-2 flex items-center justify-between gap-3 text-[10px] text-gray-400">
                           <span>ตรวจสอบล่าสุด: {item.verifiedAt}</span>
-                          <a
-                            href={item.sourceUrl}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="font-bold text-blue-600 hover:underline"
+                          <button
+                            onClick={() => setSelectedCriteria(item)}
+                            className="flex items-center gap-1.5 font-bold text-blue-600 hover:underline"
                           >
-                            เข้าไปอ่านประกาศต้นทางจริง ↗
-                          </a>
+                            <FontAwesomeIcon icon={faListCheck} />
+                            ดูรายละเอียดฉบับเต็ม
+                          </button>
                         </div>
                       </div>
                     ))}
@@ -483,6 +539,8 @@ export default function PreparePage() {
       </main>
 
       <Footer />
+
+      <AdmissionDetailModal item={selectedCriteria} onClose={() => setSelectedCriteria(null)} />
     </div>
   );
 }
