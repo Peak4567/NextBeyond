@@ -20,6 +20,8 @@ import {
   faUniversity,
   faFire,
   faBullhorn,
+  faRotate,
+  faUpRightFromSquare,
 } from "@fortawesome/free-solid-svg-icons";
 
 interface HotTopicItem {
@@ -27,6 +29,15 @@ interface HotTopicItem {
   title: string;
   time_label: string;
   tag: string;
+}
+
+interface GoogleNewsItem {
+  id: string;
+  title: string;
+  link: string;
+  source: string;
+  pubDate: string;
+  image: string;
 }
 
 interface NewsArticleItem {
@@ -46,6 +57,8 @@ export default function NewsPage() {
   const [activeTab, setActiveTab] = useState("ล่าสุด");
   const [HOT_TOPICS, setHotTopics] = useState<HotTopicItem[]>([]);
   const [MAIN_NEWS, setMainNews] = useState<NewsArticleItem[]>([]);
+  const [googleNews, setGoogleNews] = useState<GoogleNewsItem[]>([]);
+  const [loadingGoogleNews, setLoadingGoogleNews] = useState(true);
   const settings = useSiteSettings();
 
   const CATEGORIES = [
@@ -80,6 +93,34 @@ export default function NewsPage() {
     return () => controller.abort();
   }, []);
 
+  // ระบบอัตโนมัติดึงข่าวการศึกษา/TCAS ล่าสุดจาก Google News พร้อมรีเฟรชอัตโนมัติทุก 10 นาที
+  useEffect(() => {
+    const controller = new AbortController();
+
+    async function loadGoogleNews() {
+      try {
+        const response = await fetch("/api/news/google", { signal: controller.signal });
+        if (!response.ok) throw new Error("Unable to load Google News");
+
+        const data = await response.json();
+        setGoogleNews(data.items ?? []);
+      } catch (error) {
+        if ((error as Error).name !== "AbortError") {
+          setGoogleNews([]);
+        }
+      } finally {
+        setLoadingGoogleNews(false);
+      }
+    }
+
+    loadGoogleNews();
+    const interval = setInterval(loadGoogleNews, 10 * 60 * 1000);
+    return () => {
+      controller.abort();
+      clearInterval(interval);
+    };
+  }, []);
+
   return (
     <div className="flex min-h-screen flex-col bg-[#f4f7fb]">
       <Navbar />
@@ -108,15 +149,22 @@ export default function NewsPage() {
         <section className="mb-10 grid gap-6 lg:grid-cols-12">
           
           {/* ข่าวใหญ่หลัก (Col 8) */}
-          <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#002b55] via-[#004b8d] to-[#0066c4] p-6 text-white shadow-md sm:p-8 lg:col-span-8 flex flex-col justify-between">
-            <div className="flex items-center justify-between">
-              <span className="rounded-full bg-amber-400 px-3 py-1 text-[11px] font-extrabold text-[#002b55] flex items-center gap-1.5">
+          <div
+            className="relative overflow-hidden rounded-xl bg-[#002b55] bg-cover bg-center p-6 text-white shadow-md sm:p-8 lg:col-span-8 flex flex-col justify-between"
+            style={{
+              backgroundImage:
+                "url('https://images.unsplash.com/photo-1523240795612-9a054b0db644?w=1600&q=80')",
+            }}
+          >
+            <div className="absolute inset-0 bg-gradient-to-br from-[#002b55]/95 via-[#002b55]/85 to-[#0066c4]/55" />
+            <div className="relative z-10 flex items-center justify-between">
+              <span className="rounded-xl bg-amber-400 px-3 py-1 text-[11px] font-extrabold text-[#002b55] flex items-center gap-1.5">
                 <FontAwesomeIcon icon={faFire} /> ข่าวใหญ่ประจำวัน
               </span>
               <span className="text-xs text-blue-200">28 กรกฎาคม 2026</span>
             </div>
 
-            <div className="my-8">
+            <div className="relative z-10 my-8">
               <span className="text-xs font-bold text-blue-200 uppercase tracking-widest">
                 TCAS70 / OFFICIAL ANNOUNCEMENT
               </span>
@@ -128,7 +176,7 @@ export default function NewsPage() {
               </p>
             </div>
 
-            <div className="flex flex-wrap items-center justify-between gap-4 border-t border-white/10 pt-4">
+            <div className="relative z-10 flex flex-wrap items-center justify-between gap-4 border-t border-white/10 pt-4">
               <div className="flex items-center gap-3 text-xs text-blue-200">
                 <span><FontAwesomeIcon icon={faUser} className="mr-1.5" /> ทีมงาน NextBeyond</span>
                 <span>•</span>
@@ -141,7 +189,7 @@ export default function NewsPage() {
           </div>
 
           {/* แถบข่าวด่วนย่อย (Col 4) */}
-          <div className="flex flex-col justify-between rounded-3xl border border-gray-200 bg-white p-6 shadow-sm lg:col-span-4">
+          <div className="flex flex-col justify-between rounded-xl border border-gray-200 bg-white p-6 shadow-sm lg:col-span-4">
             <div>
               <div className="flex items-center justify-between border-b border-gray-100 pb-3">
                 <h3 className="text-sm font-black text-[#002b55] flex items-center gap-2">
@@ -169,7 +217,7 @@ export default function NewsPage() {
               </div>
             </div>
 
-            <div className="mt-6 rounded-2xl bg-gradient-to-r from-blue-50 to-indigo-50 p-4 border border-blue-100 text-center">
+            <div className="mt-6 rounded-xl bg-gradient-to-r from-blue-50 to-indigo-50 p-4 border border-blue-100 text-center">
               <p className="text-xs font-bold text-[#002b55]">อยากรู้เกณฑ์คณะไหนเป็นพิเศษ?</p>
               <button className="mt-2 w-full rounded-xl bg-[#004b8d] py-2 text-xs font-bold text-white hover:bg-[#002b55] flex items-center justify-center gap-2 transition-colors">
                 <FontAwesomeIcon icon={faMagnifyingGlass} /> ค้นหาเกณฑ์การรับสมัคร
@@ -179,13 +227,61 @@ export default function NewsPage() {
 
         </section>
 
+        {/* --- ข่าวการศึกษาเพิ่มเติมจากแหล่งข่าวทั่วประเทศ --- */}
+        <section className="mb-10 rounded-xl border border-gray-200 bg-white p-5 shadow-sm sm:p-6">
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+            <h3 className="flex items-center gap-2 text-sm font-black text-[#002b55]">
+              <FontAwesomeIcon icon={faRotate} className={`text-emerald-500 ${loadingGoogleNews ? "animate-spin" : ""}`} />
+              ข่าวการศึกษาเพิ่มเติม
+            </h3>
+          </div>
+
+          {loadingGoogleNews ? (
+            <div className="rounded-xl border border-dashed border-gray-200 p-6 text-center text-xs text-gray-400">
+              กำลังดึงข่าวล่าสุดจาก Google News...
+            </div>
+          ) : googleNews.length === 0 ? (
+            <div className="rounded-xl border border-dashed border-gray-200 p-6 text-center text-xs text-gray-400">
+              ยังไม่สามารถเชื่อมต่อ Google News ได้ในขณะนี้ ลองรีเฟรชหน้าใหม่อีกครั้ง
+            </div>
+          ) : (
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {googleNews.map((item) => (
+                <a
+                  key={item.id}
+                  href={item.link}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="group flex flex-col overflow-hidden rounded-xl border border-gray-100 transition-all hover:-translate-y-0.5 hover:shadow-md"
+                >
+                  <div className="relative h-32 w-full overflow-hidden">
+                    <img src={item.image} alt="" className="h-full w-full object-cover transition-transform group-hover:scale-105" />
+                    <span className="absolute left-2 top-2 rounded bg-black/50 px-1.5 py-0.5 text-[9px] font-bold text-white backdrop-blur-sm">
+                      Google News
+                    </span>
+                  </div>
+                  <div className="flex flex-1 flex-col justify-between p-3">
+                    <h4 className="text-xs font-bold leading-snug text-gray-800 line-clamp-3 group-hover:text-[#004b8d]">
+                      {item.title}
+                    </h4>
+                    <div className="mt-2 flex items-center justify-between text-[10px] text-gray-400">
+                      <span className="truncate">{item.source} · {item.pubDate}</span>
+                      <FontAwesomeIcon icon={faUpRightFromSquare} className="shrink-0 text-gray-300 group-hover:text-blue-500" />
+                    </div>
+                  </div>
+                </a>
+              ))}
+            </div>
+          )}
+        </section>
+
         <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-gray-200 pb-4">
           <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
             {CATEGORIES.map((cat) => (
               <button
                 key={cat}
                 onClick={() => setSelectedCat(cat)}
-                className={`whitespace-nowrap rounded-full px-4 py-2 text-xs font-bold transition-all ${
+                className={`whitespace-nowrap rounded-xl px-4 py-2 text-xs font-bold transition-all ${
                   selectedCat === cat
                     ? "bg-[#002b55] text-white shadow-sm"
                     : "bg-white text-gray-600 border border-gray-200 hover:bg-gray-100"
@@ -222,11 +318,11 @@ export default function NewsPage() {
             {MAIN_NEWS.map((news) => (
               <article
                 key={news.id}
-                className="group flex flex-col sm:flex-row gap-5 rounded-3xl border border-gray-200 bg-white p-5 shadow-sm transition-all hover:border-blue-300 hover:shadow-md"
+                className="group flex flex-col sm:flex-row gap-5 rounded-xl border border-gray-200 bg-white p-5 shadow-sm transition-all hover:border-blue-300 hover:shadow-md"
               >
                 {/* Thumb Image */}
                 <div
-                  className={`relative h-44 sm:h-auto sm:w-52 shrink-0 overflow-hidden rounded-2xl p-4 text-white flex flex-col justify-between shadow-inner ${
+                  className={`relative h-44 sm:h-auto sm:w-52 shrink-0 overflow-hidden rounded-xl p-4 text-white flex flex-col justify-between shadow-inner ${
                     news.cover_image ? "" : `bg-gradient-to-br ${news.image_color}`
                   }`}
                 >
@@ -292,13 +388,13 @@ export default function NewsPage() {
           <div className="space-y-6 lg:col-span-4">
             
             {/* Widget 1: ปฏิทินวันสำคัญนับถอยหลัง */}
-            <div className="rounded-3xl border border-gray-200 bg-white p-6 shadow-sm">
+            <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
               <h3 className="text-sm font-black text-[#002b55] uppercase tracking-wider mb-4 border-b border-gray-100 pb-2 flex items-center gap-2">
                 <FontAwesomeIcon icon={faCalendarDays} className="text-blue-600" /> นับถอยหลังวันสอบ TCAS70
               </h3>
 
               <div className="space-y-3">
-                <div className="flex items-center justify-between rounded-2xl bg-blue-50 p-3.5">
+                <div className="flex items-center justify-between rounded-xl bg-blue-50 p-3.5">
                   <div>
                     <h4 className="text-xs font-bold text-[#002b55]">สอบ TGAT / TPAT</h4>
                     <span className="text-[10px] text-gray-500">7 - 9 ธันวาคม 2026</span>
@@ -308,7 +404,7 @@ export default function NewsPage() {
                   </span>
                 </div>
 
-                <div className="flex items-center justify-between rounded-2xl bg-orange-50 p-3.5">
+                <div className="flex items-center justify-between rounded-xl bg-orange-50 p-3.5">
                   <div>
                     <h4 className="text-xs font-bold text-orange-900">สอบ A-Level</h4>
                     <span className="text-[10px] text-gray-500">16 - 18 มีนาคม 2027</span>
@@ -321,7 +417,7 @@ export default function NewsPage() {
             </div>
 
             {/* Widget 2: ติดตามข่าวแยกตามมหาวิทยาลัย */}
-            <div className="rounded-3xl border border-gray-200 bg-white p-6 shadow-sm">
+            <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
               <h3 className="text-sm font-black text-[#002b55] uppercase tracking-wider mb-4 border-b border-gray-100 pb-2 flex items-center gap-2">
                 <FontAwesomeIcon icon={faUniversity} className="text-[#002b55]" /> ประกาศตามมหาวิทยาลัย
               </h3>
@@ -349,7 +445,7 @@ export default function NewsPage() {
             </div>
 
             {/* Widget 3: Newsletter Box */}
-            <div className="rounded-3xl bg-gradient-to-br from-[#002b55] to-[#004b8d] p-6 text-white shadow-md">
+            <div className="rounded-xl bg-gradient-to-br from-[#002b55] to-[#004b8d] p-6 text-white shadow-md">
               <span className="text-[10px] font-bold text-amber-300 uppercase tracking-widest flex items-center gap-1.5">
                 <FontAwesomeIcon icon={faPaperPlane} /> FREE NEWSLETTER
               </span>

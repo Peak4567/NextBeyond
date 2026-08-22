@@ -160,7 +160,7 @@ export default function NewsBlockEditorPage() {
 
       {/* Add block controls */}
       <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <form onSubmit={handleAddText} className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
+        <form onSubmit={handleAddText} className="rounded-xl border border-gray-100 bg-white p-5 shadow-sm">
           <h2 className="text-xs font-bold text-[#003b73]">เพิ่มบล็อกข้อความ</h2>
           <textarea
             value={newText}
@@ -190,7 +190,7 @@ export default function NewsBlockEditorPage() {
           </button>
         </form>
 
-        <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
+        <div className="rounded-xl border border-gray-100 bg-white p-5 shadow-sm">
           <h2 className="flex items-center gap-2 text-xs font-bold text-[#003b73]">
             <FontAwesomeIcon icon={faImage} />
             เพิ่มบล็อกรูปภาพ
@@ -218,7 +218,7 @@ export default function NewsBlockEditorPage() {
           <p className="text-center text-xs text-gray-400">ยังไม่มีเนื้อหาในข่าวนี้</p>
         ) : (
           blocks.map((block, index) => (
-            <div key={block.id} className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm">
+            <div key={block.id} className="rounded-xl border border-gray-100 bg-white p-4 shadow-sm">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <span className="text-[10px] font-bold uppercase text-gray-400">
                   บล็อกที่ {index + 1} • {block.block_type === "text" ? "ข้อความ" : "รูปภาพ"}

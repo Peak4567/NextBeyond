@@ -81,7 +81,7 @@ export default function AdminUsersPage() {
         </div>
       )}
 
-      <div className="mt-6 overflow-x-auto rounded-2xl border border-gray-100 bg-white shadow-sm">
+      <div className="mt-6 overflow-x-auto rounded-xl border border-gray-100 bg-white shadow-sm">
         <table className="w-full min-w-[640px] text-left text-sm">
           <thead className="border-b border-gray-100 bg-gray-50 text-xs font-bold text-gray-500">
             <tr>

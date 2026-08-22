@@ -1,8 +1,14 @@
 import type { Metadata } from "next";
 import { Noto_Sans_Thai } from "next/font/google";
+import { config } from "@fortawesome/fontawesome-svg-core";
+import "@fortawesome/fontawesome-svg-core/styles.css";
 import "sweetalert2/dist/sweetalert2.min.css";
 import "./globals.css";
 import { getSettings } from "@/lib/settings";
+
+// ปิดการแทรก CSS ของ FontAwesome แบบ runtime (autoAddCss) แล้วใช้ CSS ไฟล์จริงแทน
+// ป้องกันปัญหาไอคอนกะพริบเป็นบล็อกสี่เหลี่ยม/ไม่มีขนาดตอนโหลดหน้าครั้งแรกหรือหลัง Fast Refresh
+config.autoAddCss = false;
 
 const noto = Noto_Sans_Thai({
   subsets: ["thai", "latin"],

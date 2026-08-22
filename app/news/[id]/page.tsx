@@ -6,6 +6,27 @@ import { getNewsArticleById, getNewsBlocks } from "@/lib/data";
 
 export const dynamic = "force-dynamic";
 
+// รองรับลิงก์รูปแบบ [ข้อความ](url) ภายในเนื้อหาข่าว — แปลงเป็นลิงก์ที่คลิกได้จริง เปิดแท็บใหม่ไปยังต้นฉบับ
+function renderTextWithLinks(text: string) {
+  const parts = text.split(/(\[[^\]]+\]\([^)]+\))/g);
+  return parts.map((part, i) => {
+    const match = part.match(/^\[([^\]]+)\]\(([^)]+)\)$/);
+    if (!match) return <span key={i}>{part}</span>;
+    const [, label, url] = match;
+    return (
+      <a
+        key={i}
+        href={url}
+        target="_blank"
+        rel="noreferrer"
+        className="font-bold text-blue-600 underline hover:text-blue-800"
+      >
+        {label}
+      </a>
+    );
+  });
+}
+
 export default async function NewsDetailPage({ params }: { params: { id: string } }) {
   const id = Number(params.id);
   if (!Number.isInteger(id)) notFound();
@@ -24,8 +45,8 @@ export default async function NewsDetailPage({ params }: { params: { id: string 
           ← กลับไปหน้าข่าวสาร
         </Link>
 
-        <article className="mt-4 rounded-3xl border border-gray-200 bg-white p-6 shadow-sm sm:p-8">
-          <span className="rounded-full bg-blue-50 px-3 py-1 text-[11px] font-bold text-blue-600">
+        <article className="mt-4 rounded-xl border border-gray-200 bg-white p-6 shadow-sm sm:p-8">
+          <span className="rounded-xl bg-blue-50 px-3 py-1 text-[11px] font-bold text-blue-600">
             {article.category}
           </span>
           <h1 className="mt-3 text-2xl font-black text-[#002b55] sm:text-3xl">{article.title}</h1>
@@ -42,10 +63,10 @@ export default async function NewsDetailPage({ params }: { params: { id: string 
             <img
               src={article.cover_image}
               alt=""
-              className="mt-6 w-full rounded-2xl object-cover"
+              className="mt-6 w-full rounded-xl object-cover"
             />
           ) : (
-            <div className={`mt-6 flex h-56 w-full items-center justify-center rounded-2xl bg-gradient-to-br ${article.image_color} text-sm font-bold text-white`}>
+            <div className={`mt-6 flex h-56 w-full items-center justify-center rounded-xl bg-gradient-to-br ${article.image_color} text-sm font-bold text-white`}>
               {article.title}
             </div>
           )}
@@ -59,14 +80,14 @@ export default async function NewsDetailPage({ params }: { params: { id: string 
                   key={block.id}
                   src={block.image_path}
                   alt=""
-                  className="w-full rounded-2xl border border-gray-100 object-cover"
+                  className="w-full rounded-xl border border-gray-100 object-cover"
                 />
               ) : block.block_type === "text" ? (
                 <p
                   key={block.id}
-                  className={`text-sm leading-relaxed text-gray-700 ${block.is_bold ? "font-bold" : ""} ${block.is_italic ? "italic" : ""}`}
+                  className={`text-sm leading-relaxed text-gray-700 ${block.is_bold ? "text-base font-extrabold text-[#003b73]" : ""} ${block.is_italic ? "italic" : ""}`}
                 >
-                  {block.text_content}
+                  {renderTextWithLinks(block.text_content ?? "")}
                 </p>
               ) : null
             )}

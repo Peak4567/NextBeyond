@@ -1,11 +1,17 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faListCheck, faBuildingColumns } from "@fortawesome/free-solid-svg-icons";
+import {
+  faListCheck,
+  faBuildingColumns,
+  faMagnifyingGlass,
+  faArrowUpRightFromSquare,
+} from "@fortawesome/free-solid-svg-icons";
 import AdmissionDetailModal, {
   type AdmissionDetails,
   type ScoreBadge,
@@ -73,7 +79,8 @@ interface ExamBankItem {
 }
 
 export default function PreparePage() {
-  const [searchTerm, setSearchTerm] = useState("");
+  const searchParams = useSearchParams();
+  const [searchTerm, setSearchTerm] = useState(searchParams.get("q") ?? "");
   const [selectedRound, setSelectedRound] = useState("");
   const [criteria, setCriteria] = useState<AdmissionCriteriaItem[]>([]);
   const [criteriaTotal, setCriteriaTotal] = useState(0);
@@ -197,12 +204,10 @@ export default function PreparePage() {
           <div className="space-y-6 lg:col-span-7">
 
             {/* 1. ค้นหาเกณฑ์การรับสมัคร TCAS */}
-            <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
+            <div className="rounded-xl border border-gray-100 bg-white p-6 shadow-sm">
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div className="flex items-center gap-2 text-base font-bold text-[#003b73]">
-                  <svg className="h-5 w-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                  </svg>
+                  <FontAwesomeIcon icon={faMagnifyingGlass} className="h-5 w-5 text-blue-600" />
                   <span>ค้นหาเกณฑ์การรับสมัคร TCAS70</span>
                 </div>
                 <Link
@@ -217,9 +222,7 @@ export default function PreparePage() {
               <div className="mt-4">
                 <div className="relative">
                   <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
-                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                    </svg>
+                    <FontAwesomeIcon icon={faMagnifyingGlass} className="h-4 w-4" />
                   </span>
                   <input
                     type="text"
@@ -310,11 +313,11 @@ export default function PreparePage() {
                           </span>
                           <div className="flex items-center gap-1.5">
                             {item.isCustomPortal && (
-                              <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-bold text-emerald-700">
+                              <span className="rounded-xl bg-emerald-100 px-2 py-0.5 text-[10px] font-bold text-emerald-700">
                                 {item.sourceLabel}
                               </span>
                             )}
-                            <span className="rounded-full bg-orange-100 px-2.5 py-0.5 text-[10px] font-bold text-orange-600">
+                            <span className="rounded-xl bg-orange-100 px-2.5 py-0.5 text-[10px] font-bold text-orange-600">
                               {item.roundName}
                             </span>
                           </div>
@@ -359,13 +362,25 @@ export default function PreparePage() {
 
                         <div className="mt-2 flex items-center justify-between gap-3 text-[10px] text-gray-400">
                           <span>ตรวจสอบล่าสุด: {item.verifiedAt}</span>
-                          <button
-                            onClick={() => setSelectedCriteria(item)}
-                            className="flex items-center gap-1.5 font-bold text-blue-600 hover:underline"
-                          >
-                            <FontAwesomeIcon icon={faListCheck} />
-                            ดูรายละเอียดฉบับเต็ม
-                          </button>
+                          <div className="flex items-center gap-3">
+                            <button
+                              onClick={() => setSelectedCriteria(item)}
+                              className="flex items-center gap-1.5 font-bold text-blue-600 hover:underline"
+                            >
+                              <FontAwesomeIcon icon={faListCheck} />
+                              ดูรายละเอียดฉบับเต็ม
+                            </button>
+                            <a
+                              href={item.sourceUrl}
+                              target="_blank"
+                              rel="noreferrer"
+                              onClick={(e) => e.stopPropagation()}
+                              className="flex items-center gap-1.5 rounded-lg bg-[#003b73] px-2.5 py-1 font-bold text-white hover:bg-[#004b8d]"
+                            >
+                              <FontAwesomeIcon icon={faArrowUpRightFromSquare} />
+                              สมัครสอบ
+                            </a>
+                          </div>
                         </div>
                       </div>
                     ))}
@@ -379,7 +394,7 @@ export default function PreparePage() {
             </div>
 
             {/* 2. Admission Roadmap */}
-            <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
+            <div className="rounded-xl border border-gray-100 bg-white p-6 shadow-sm">
               <div className="flex items-center gap-2 text-base font-bold text-[#003b73]">
                 <div className="h-4 w-4 rounded-md border-2 border-orange-400 bg-orange-100" />
                 <span>Admission Roadmap</span>
@@ -396,7 +411,7 @@ export default function PreparePage() {
                     </div>
                     <span className="mt-3 text-xs font-bold text-gray-800">สำรวจตัวเอง</span>
                     <span className="text-[10px] text-gray-400">ค้นหาคณะที่ใช่จากผลทดสอบ</span>
-                    <span className="mt-2 rounded-full bg-emerald-100 px-2 py-0.5 text-[9px] font-bold text-emerald-600">
+                    <span className="mt-2 rounded-xl bg-emerald-100 px-2 py-0.5 text-[9px] font-bold text-emerald-600">
                       เสร็จสิ้นแล้ว
                     </span>
                   </div>
@@ -407,7 +422,7 @@ export default function PreparePage() {
                     </div>
                     <span className="mt-3 text-xs font-bold text-gray-800">สะสมผลงาน</span>
                     <span className="text-[10px] text-gray-400">ฝากกิจกรรมและวุฒิบัตรในคลัง</span>
-                    <span className="mt-2 rounded-full bg-orange-100 px-2 py-0.5 text-[9px] font-bold text-orange-600">
+                    <span className="mt-2 rounded-xl bg-orange-100 px-2 py-0.5 text-[9px] font-bold text-orange-600">
                       กำลังดำเนินการ
                     </span>
                   </div>
@@ -431,15 +446,21 @@ export default function PreparePage() {
               </div>
             </div>
 
-            {/* 3. คลังข้อสอบเก่าย้อนหลัง */}
-            <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
+            {/* 3. คลังข้อสอบฝึกทำ */}
+            <div className="rounded-xl border border-gray-100 bg-white p-6 shadow-sm">
               <div className="flex items-center justify-between">
-                <h3 className="text-sm font-bold text-[#003b73]">คลังข้อสอบเก่าจำลอง (Mock Exam)</h3>
-                <span className="text-xs text-blue-600 hover:underline cursor-pointer">ดูทั้งหมด</span>
+                <h3 className="text-sm font-bold text-[#003b73]">คลังข้อสอบฝึกทำ (Mock Exam)</h3>
+                <Link href="/exam-bank" className="text-xs text-blue-600 hover:underline">
+                  ดูทั้งหมด
+                </Link>
               </div>
               <div className="mt-4 grid gap-3 sm:grid-cols-2">
                 {examBank.map((item) => (
-                  <div key={item.id} className="flex items-center gap-3 rounded-xl border border-gray-100 bg-gray-50/50 p-3">
+                  <Link
+                    href="/exam-bank"
+                    key={item.id}
+                    className="flex items-center gap-3 rounded-xl border border-gray-100 bg-gray-50/50 p-3 transition-colors hover:border-blue-200 hover:bg-blue-50/40"
+                  >
                     <div
                       className={`flex h-10 w-10 items-center justify-center rounded-lg font-bold text-xs ${EXAM_BANK_COLOR_CLASSES[item.color] ?? "bg-gray-100 text-gray-700"}`}
                     >
@@ -449,7 +470,7 @@ export default function PreparePage() {
                       <h4 className="text-xs font-bold text-gray-800">{item.title}</h4>
                       <p className="text-[10px] text-gray-400">{item.meta}</p>
                     </div>
-                  </div>
+                  </Link>
                 ))}
               </div>
             </div>
@@ -460,10 +481,10 @@ export default function PreparePage() {
           <div className="space-y-6 lg:col-span-5">
 
             {/* 1. วันสำคัญที่ต้องจำ */}
-            <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
+            <div className="rounded-xl border border-gray-100 bg-white p-6 shadow-sm">
               <div className="flex items-center justify-between">
                 <h3 className="text-sm font-bold text-[#003b73]">วันสำคัญที่ต้องจำ</h3>
-                <a href="#" className="text-xs text-blue-600 hover:underline">ดูปฏิทินเต็ม</a>
+                <Link href="/prepare/calendar" className="text-xs text-blue-600 hover:underline">ดูปฏิทินเต็ม</Link>
               </div>
 
               <div className="mt-4 space-y-4">
@@ -483,7 +504,7 @@ export default function PreparePage() {
             </div>
 
             {/* 2. Checklist เอกสาร */}
-            <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
+            <div className="rounded-xl border border-gray-100 bg-white p-6 shadow-sm">
               <h3 className="text-sm font-bold text-[#003b73]">Checklist เอกสาร</h3>
 
               <div className="mt-4 space-y-2.5">
@@ -506,9 +527,9 @@ export default function PreparePage() {
                   <span>ความพร้อมเอกสาร</span>
                   <span className="text-orange-500">{progressPercentage}%</span>
                 </div>
-                <div className="mt-1.5 h-2 w-full overflow-hidden rounded-full bg-gray-100">
+                <div className="mt-1.5 h-2 w-full overflow-hidden rounded-xl bg-gray-100">
                   <div
-                    className="h-full rounded-full bg-orange-500 transition-all duration-300"
+                    className="h-full rounded-xl bg-orange-500 transition-all duration-300"
                     style={{ width: `${progressPercentage}%` }}
                   />
                 </div>
@@ -516,10 +537,10 @@ export default function PreparePage() {
             </div>
 
             {/* 3. ตารางอ่านหนังสือรายวัน */}
-            <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
+            <div className="rounded-xl border border-gray-100 bg-white p-6 shadow-sm">
               <div className="flex items-center justify-between mb-3">
                 <h3 className="text-sm font-bold text-[#003b73]">ตารางอ่านหนังสือวันนี้</h3>
-                <span className="rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-bold text-blue-600">3/5 วิชา</span>
+                <span className="rounded-xl bg-blue-100 px-2 py-0.5 text-[10px] font-bold text-blue-600">3/5 วิชา</span>
               </div>
               <div className="space-y-2 text-xs">
                 <div className="flex items-center justify-between rounded-lg bg-gray-50 p-2.5">

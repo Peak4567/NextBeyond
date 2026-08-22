@@ -5,6 +5,19 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  faUsers,
+  faPlus,
+  faFire,
+  faMagnifyingGlass,
+  faEye,
+  faHeart,
+  faTrophy,
+  faComments,
+  faLightbulb,
+  faFolderOpen,
+} from "@fortawesome/free-solid-svg-icons";
 
 interface PortfolioItem {
   id: number;
@@ -108,6 +121,18 @@ export default function CommunityPage() {
 
   const topPortfolios = [...PORTFOLIOS].sort((a, b) => b.likes - a.likes).slice(0, 3);
 
+  const searchTerm = searchQuery.trim().toLowerCase();
+  const filteredPortfolios = PORTFOLIOS.filter((item) => {
+    const matchesFaculty = selectedFaculty === "ทั้งหมด" || item.faculty === selectedFaculty;
+    const matchesSearch =
+      !searchTerm ||
+      [item.title, item.university, item.school, item.student_name, item.tags]
+        .join(" ")
+        .toLowerCase()
+        .includes(searchTerm);
+    return matchesFaculty && matchesSearch;
+  });
+
   return (
     <div className="flex min-h-screen flex-col bg-[#f8fbff]">
       <Navbar />
@@ -117,8 +142,8 @@ export default function CommunityPage() {
         {/* --- HEADER --- */}
         <div className="mb-6 flex flex-col justify-between gap-4 md:flex-row md:items-end">
           <div>
-            <div className="inline-flex items-center gap-2 rounded-full bg-blue-100 px-3 py-1 text-xs font-bold text-[#005a9c]">
-              <span>👥 Student Community</span>
+            <div className="inline-flex items-center gap-2 rounded-xl bg-blue-100 px-3 py-1 text-xs font-bold text-[#005a9c]">
+              <FontAwesomeIcon icon={faUsers} /> Student Community
             </div>
             <h1 className="mt-2 text-3xl font-extrabold text-[#003b73] sm:text-4xl">
               ชุมชนแลกเปลี่ยนผลงาน Portfolio
@@ -132,21 +157,26 @@ export default function CommunityPage() {
             href="/profile"
             className="flex items-center justify-center gap-2 rounded-xl bg-[#005a9c] px-5 py-3 text-sm font-bold text-white shadow-md transition-all hover:bg-[#003b73]"
           >
-            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-            </svg>
+            <FontAwesomeIcon icon={faPlus} />
             อัปโหลดเล่มของคุณ
           </Link>
         </div>
 
         {/* --- BANNER NEW FEATURE: TCASFolio --- */}
-        <div className="relative mb-10 overflow-hidden rounded-3xl bg-gradient-to-r from-[#003b73] via-[#005a9c] to-[#71bbee] p-6 text-white shadow-lg sm:p-8">
+        <div
+          className="relative mb-10 overflow-hidden rounded-xl bg-[#003b73] bg-cover bg-center p-6 text-white shadow-lg sm:p-8"
+          style={{
+            backgroundImage:
+              "url('https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=1600&q=80')",
+          }}
+        >
+          <div className="absolute inset-0 bg-gradient-to-r from-[#003b73]/95 via-[#003b73]/85 to-[#005a9c]/60" />
           <div className="absolute -right-10 -bottom-10 h-48 w-48 rounded-full bg-white/10 blur-2xl" />
-          
+
           <div className="relative z-10 flex flex-col items-start justify-between gap-6 lg:flex-row lg:items-center">
             <div className="max-w-2xl">
               <span className="rounded-md bg-[#fcd116] px-2.5 py-1 text-[11px] font-extrabold text-[#003b73] uppercase tracking-wider">
-                ระบบใหม่ล่าสุด 🔥
+                ระบบใหม่ล่าสุด <FontAwesomeIcon icon={faFire} />
               </span>
               <h2 className="mt-2 text-2xl font-black sm:text-3xl">
                 TCASFolio - AI ตรวจสอบโครงสร้างเล่ม Portfolio
@@ -168,9 +198,14 @@ export default function CommunityPage() {
               </div>
             </div>
 
-            <button className="whitespace-nowrap rounded-2xl bg-[#fcd116] px-6 py-3.5 text-sm font-extrabold text-[#003b73] shadow-md transition-all hover:bg-yellow-300 hover:scale-105">
+            <a
+              href="https://www.mytcas.com"
+              target="_blank"
+              rel="noreferrer"
+              className="whitespace-nowrap rounded-xl bg-[#fcd116] px-6 py-3.5 text-sm font-extrabold text-[#003b73] shadow-md transition-all hover:bg-yellow-300 hover:scale-105"
+            >
               ลองใช้ TCASFolio ฟรี ➔
-            </button>
+            </a>
           </div>
         </div>
 
@@ -182,12 +217,10 @@ export default function CommunityPage() {
           <div className="space-y-6 lg:col-span-8">
             
             {/* SEARCH & FACULTY FILTER BAR */}
-            <div className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm space-y-4">
+            <div className="rounded-xl border border-gray-100 bg-white p-4 shadow-sm space-y-4">
               <div className="relative">
                 <span className="absolute inset-y-0 left-0 flex items-center pl-3.5 text-gray-400">
-                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                  </svg>
+                  <FontAwesomeIcon icon={faMagnifyingGlass} className="h-4 w-4" />
                 </span>
                 <input
                   type="text"
@@ -216,14 +249,33 @@ export default function CommunityPage() {
               </div>
             </div>
 
-            {/* PORTFOLIO CARDS GRID */}
+            {/* PORTFOLIO CARDS GRID — แสดงผลเป็นเล่ม Portfolio ปกกระดาษ A4 */}
+            {filteredPortfolios.length === 0 ? (
+              <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-gray-200 bg-white py-16 text-center">
+                <span className="flex h-14 w-14 items-center justify-center rounded-full bg-blue-50 text-2xl text-blue-300">
+                  <FontAwesomeIcon icon={faFolderOpen} />
+                </span>
+                <h3 className="mt-4 text-sm font-bold text-gray-700">
+                  {PORTFOLIOS.length === 0
+                    ? "ตอนนี้ยังไม่มีผลงาน Portfolio ในระบบ"
+                    : "ไม่พบผลงานที่ตรงกับตัวกรองที่เลือก"}
+                </h3>
+                <p className="mt-1.5 max-w-sm text-xs text-gray-400">
+                  {PORTFOLIOS.length === 0
+                    ? "เมื่อมีรุ่นพี่อัปโหลดเล่ม Portfolio และผ่านการอนุมัติแล้ว ผลงานจะแสดงขึ้นที่นี่โดยอัตโนมัติ"
+                    : "ลองเปลี่ยนคำค้นหา หรือเลือกคณะอื่นดูนะ"}
+                </p>
+              </div>
+            ) : (
             <div className="grid gap-5 sm:grid-cols-2">
-              {PORTFOLIOS.map((item) => (
-                <div key={item.id} className="group flex flex-col justify-between overflow-hidden rounded-2xl border border-gray-100 bg-white p-4 shadow-sm transition-all hover:-translate-y-1 hover:shadow-md">
-                  <div>
-                    {/* Cover Preview */}
+              {filteredPortfolios.map((item) => (
+                <div key={item.id} className="group flex gap-4 rounded-xl border border-gray-100 bg-white p-4 shadow-sm transition-all hover:-translate-y-1 hover:shadow-md">
+                  {/* ปกกระดาษ A4 พร้อมเอฟเฟกต์เงาเล่มหนา */}
+                  <div className="relative w-24 shrink-0 sm:w-28">
+                    <div className="absolute inset-0 translate-x-1.5 translate-y-1.5 rounded-md bg-gray-300/70 aspect-[210/297]" />
+                    <div className="absolute inset-0 translate-x-[3px] translate-y-[3px] rounded-md border border-gray-200 bg-gray-100 aspect-[210/297]" />
                     <div
-                      className={`relative flex h-40 w-full items-end overflow-hidden rounded-xl p-4 text-white shadow-inner ${
+                      className={`relative flex aspect-[210/297] w-full flex-col justify-end overflow-hidden rounded-md border border-gray-200 p-2.5 text-white shadow-lg ${
                         item.cover_image ? "" : `bg-gradient-to-br ${item.cover_bg}`
                       }`}
                     >
@@ -234,17 +286,23 @@ export default function CommunityPage() {
                           className="absolute inset-0 h-full w-full object-cover"
                         />
                       )}
-                      <span className="absolute top-3 right-3 z-10 rounded-md bg-black/40 px-2 py-0.5 text-[10px] font-medium backdrop-blur-sm">
-                        {item.page_count} หน้า (PDF)
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
+                      <span className="absolute top-2 right-2 z-10 rounded bg-black/50 px-1.5 py-0.5 text-[8px] font-bold backdrop-blur-sm">
+                        {item.page_count} หน้า
                       </span>
                       <div className="relative z-10">
-                        <span className="text-[10px] font-bold text-white/80 uppercase">{item.university}</span>
-                        <h4 className="text-xs font-extrabold line-clamp-1">{item.faculty}</h4>
+                        <span className="text-[8px] font-bold text-white/80 uppercase leading-tight">{item.university}</span>
+                        <h4 className="text-[10px] font-extrabold leading-snug line-clamp-2">{item.faculty}</h4>
                       </div>
                     </div>
+                    <span className="mt-1.5 block text-center text-[9px] font-semibold uppercase tracking-wider text-gray-400">
+                      A4 Portfolio
+                    </span>
+                  </div>
 
+                  <div className="flex flex-1 flex-col justify-between">
                     {/* Meta info */}
-                    <div className="mt-3">
+                    <div>
                       <h3 className="text-sm font-bold text-gray-800 line-clamp-1 group-hover:text-[#005a9c]">
                         {item.title}
                       </h3>
@@ -261,25 +319,26 @@ export default function CommunityPage() {
                         ))}
                       </div>
                     </div>
-                  </div>
 
-                  {/* Card Footer Statistics */}
-                  <div className="mt-4 flex items-center justify-between border-t border-gray-50 pt-3 text-[11px] text-gray-400">
-                    <div className="flex items-center gap-3">
-                      <span className="flex items-center gap-1">
-                        👁️ {item.views}
-                      </span>
-                      <span className="flex items-center gap-1 text-rose-500 font-medium">
-                        ❤️ {item.likes}
-                      </span>
+                    {/* Card Footer Statistics */}
+                    <div className="mt-4 flex items-center justify-between border-t border-gray-50 pt-3 text-[11px] text-gray-400">
+                      <div className="flex items-center gap-3">
+                        <span className="flex items-center gap-1">
+                          <FontAwesomeIcon icon={faEye} /> {item.views}
+                        </span>
+                        <span className="flex items-center gap-1 text-rose-500 font-medium">
+                          <FontAwesomeIcon icon={faHeart} /> {item.likes}
+                        </span>
+                      </div>
+                      <Link href={`/community-students/${item.id}`} className="font-bold text-[#005a9c] hover:underline">
+                        เปิดดูเล่ม ➔
+                      </Link>
                     </div>
-                    <Link href={`/community-students/${item.id}`} className="font-bold text-[#005a9c] hover:underline">
-                      เปิดดูเล่ม ➔
-                    </Link>
                   </div>
                 </div>
               ))}
             </div>
+            )}
 
           </div>
 
@@ -288,40 +347,48 @@ export default function CommunityPage() {
           <div className="space-y-6 lg:col-span-4">
             
             {/* 1. Leaderboard พอร์ตยอดนิยม */}
-            <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
+            <div className="rounded-xl border border-gray-100 bg-white p-5 shadow-sm">
               <div className="flex items-center justify-between border-b border-gray-100 pb-3">
                 <h3 className="text-sm font-bold text-[#003b73] flex items-center gap-2">
-                  🏆 พอร์ตติดท็อปสัปดาห์นี้
+                  <FontAwesomeIcon icon={faTrophy} className="text-amber-500" /> พอร์ตติดท็อปสัปดาห์นี้
                 </h3>
                 <span className="text-[10px] font-bold text-gray-400">Weekly Top</span>
               </div>
 
               <div className="mt-3 space-y-3">
-                {topPortfolios.map((item, index) => (
-                  <Link
-                    href={`/community-students/${item.id}`}
-                    key={item.id}
-                    className="flex items-center gap-3 rounded-xl p-2 hover:bg-gray-50"
-                  >
-                    <span className={`flex h-6 w-6 items-center justify-center rounded-lg text-xs font-black ${
-                      index === 0 ? "bg-amber-100 text-amber-700" : index === 1 ? "bg-gray-200 text-gray-700" : "bg-orange-100 text-orange-700"
-                    }`}>
-                      {index + 1}
-                    </span>
-                    <div className="flex-1 overflow-hidden">
-                      <h4 className="text-xs font-bold text-gray-800 truncate">{item.title}</h4>
-                      <p className="text-[10px] text-gray-400">{item.student_name}</p>
-                    </div>
-                    <span className="text-[10px] font-bold text-rose-500">❤️ {item.likes}</span>
-                  </Link>
-                ))}
+                {topPortfolios.length === 0 ? (
+                  <p className="py-4 text-center text-xs text-gray-400">ยังไม่มีผลงานให้จัดอันดับตอนนี้</p>
+                ) : (
+                  topPortfolios.map((item, index) => (
+                    <Link
+                      href={`/community-students/${item.id}`}
+                      key={item.id}
+                      className="flex items-center gap-3 rounded-xl p-2 hover:bg-gray-50"
+                    >
+                      <span className={`flex h-6 w-6 items-center justify-center rounded-lg text-xs font-black ${
+                        index === 0 ? "bg-amber-100 text-amber-700" : index === 1 ? "bg-gray-200 text-gray-700" : "bg-orange-100 text-orange-700"
+                      }`}>
+                        {index + 1}
+                      </span>
+                      <div className="flex-1 overflow-hidden">
+                        <h4 className="text-xs font-bold text-gray-800 truncate">{item.title}</h4>
+                        <p className="text-[10px] text-gray-400">{item.student_name}</p>
+                      </div>
+                      <span className="text-[10px] font-bold text-rose-500">
+                        <FontAwesomeIcon icon={faHeart} /> {item.likes}
+                      </span>
+                    </Link>
+                  ))
+                )}
               </div>
             </div>
 
             {/* 2. ฟอรัมพูดคุย & ถามตอบ */}
-            <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
+            <div className="rounded-xl border border-gray-100 bg-white p-5 shadow-sm">
               <div className="flex items-center justify-between border-b border-gray-100 pb-3">
-                <h3 className="text-sm font-bold text-[#003b73]">💬 พูดคุยเรื่อง Portfolio</h3>
+                <h3 className="text-sm font-bold text-[#003b73]">
+                  <FontAwesomeIcon icon={faComments} className="text-blue-500" /> พูดคุยเรื่อง Portfolio
+                </h3>
                 <button
                   onClick={() => setShowThreadForm((prev) => !prev)}
                   className="text-[11px] font-semibold text-blue-600 hover:underline"
@@ -358,7 +425,7 @@ export default function CommunityPage() {
                     </h4>
                     <div className="mt-1 flex items-center justify-between text-[10px] text-gray-400">
                       <span>โดย {topic.author}</span>
-                      <span>💬 {topic.replies} ตอบ • {topic.time_label}</span>
+                      <span><FontAwesomeIcon icon={faComments} /> {topic.replies} ตอบ • {topic.time_label}</span>
                     </div>
                   </div>
                 ))}
@@ -366,8 +433,10 @@ export default function CommunityPage() {
             </div>
 
             {/* 3. คำแนะนำสำหรับการยื่นพอร์ต */}
-            <div className="rounded-2xl border border-blue-100 bg-blue-50/60 p-5">
-              <h4 className="text-xs font-extrabold text-[#003b73]">💡 ข้อควรระวังในการยื่น Portfolio</h4>
+            <div className="rounded-xl border border-blue-100 bg-blue-50/60 p-5">
+              <h4 className="text-xs font-extrabold text-[#003b73]">
+                <FontAwesomeIcon icon={faLightbulb} className="text-amber-400" /> ข้อควรระวังในการยื่น Portfolio
+              </h4>
               <ul className="mt-2 space-y-1.5 text-[11px] text-gray-600 list-disc list-inside">
                 <li>ขนาดไฟล์ PDF ต้องไม่เกินที่ระบบ TCAS กำหนด (ส่วนใหญ่ 10-20 MB)</li>
                 <li>ห้ามใส่ข้อมูลเท็จ หรือปลอมแปลงเกียรติบัตรเด็ดขาด</li>

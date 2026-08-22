@@ -155,7 +155,7 @@ export default function AdminResourcePage() {
       <p className="mt-1 text-sm text-gray-500">{config.description}</p>
 
       {config.syncAction && (
-        <div className="mt-4 flex flex-col gap-3 rounded-2xl border border-blue-100 bg-blue-50/60 p-5 sm:flex-row sm:items-center sm:justify-between">
+        <div className="mt-4 flex flex-col gap-3 rounded-xl border border-blue-100 bg-blue-50/60 p-5 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <p className="text-xs font-bold text-[#003b73]">ดึงข้อมูลจริงจากเว็บไซต์ TCAS70</p>
             <p className="mt-0.5 text-[11px] text-gray-500">
@@ -174,7 +174,7 @@ export default function AdminResourcePage() {
       )}
 
       {/* Add form */}
-      <form onSubmit={handleSubmit} className="mt-6 rounded-2xl border border-gray-100 bg-white p-5 shadow-sm sm:p-6">
+      <form onSubmit={handleSubmit} className="mt-6 rounded-xl border border-gray-100 bg-white p-5 shadow-sm sm:p-6">
         <h2 className="text-sm font-bold text-[#003b73]">เพิ่มข้อมูลใหม่</h2>
 
         {error && (
@@ -261,7 +261,7 @@ export default function AdminResourcePage() {
       </form>
 
       {/* List */}
-      <div className="mt-6 overflow-x-auto rounded-2xl border border-gray-100 bg-white shadow-sm">
+      <div className="mt-6 overflow-x-auto rounded-xl border border-gray-100 bg-white shadow-sm">
         <table className="w-full min-w-[640px] text-left text-sm">
           <thead className="border-b border-gray-100 bg-gray-50 text-xs font-bold text-gray-500">
             <tr>

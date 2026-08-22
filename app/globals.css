@@ -15,7 +15,7 @@ body {
   width: 23rem;
   max-width: 92vw;
   padding: 2.25rem 1.75rem 1.75rem;
-  border-radius: 28px;
+  border-radius: 12px;
   font-family: var(--font-noto), system-ui, sans-serif;
   box-shadow: 0 25px 60px -15px rgba(0, 43, 85, 0.35);
 }
@@ -24,7 +24,7 @@ body {
   width: 64px;
   height: 64px;
   margin: 0 auto 1rem;
-  border-radius: 20px;
+  border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -124,7 +124,7 @@ body {
   min-width: 280px;
   max-width: 340px;
   padding: 0.9rem 1.1rem;
-  border-radius: 16px;
+  border-radius: 12px;
   background: #fff;
   box-shadow: 0 15px 35px -10px rgba(0, 0, 0, 0.25);
   border-left: 4px solid;
@@ -168,4 +168,34 @@ body {
   font-size: 0.7rem;
   color: #64748b;
   text-align: left;
+}
+
+/* ===== พิมพ์เกณฑ์การรับสมัครเป็น PDF (ผ่านหน้าต่างพิมพ์ของเบราว์เซอร์) ===== */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  #admission-pdf-content,
+  #admission-pdf-content *,
+  #exam-pdf-content,
+  #exam-pdf-content * {
+    visibility: visible;
+  }
+  #admission-pdf-content,
+  #exam-pdf-content {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    padding: 0;
+    margin: 0;
+    box-shadow: none !important;
+  }
+  #admission-pdf-content *,
+  #exam-pdf-content * {
+    max-height: none !important;
+    overflow: visible !important;
+  }
+  .nb-no-print {
+    display: none !important;
+  }
 }

@@ -49,7 +49,7 @@ export default async function AdminDashboardPage() {
         {stats.map((stat) => (
           <div
             key={stat.label}
-            className="flex items-center gap-4 rounded-2xl border border-gray-100 bg-white p-5 shadow-sm sm:p-6"
+            className="flex items-center gap-4 rounded-xl border border-gray-100 bg-white p-5 shadow-sm sm:p-6"
           >
             <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-lg text-[#005a9c]">
               <FontAwesomeIcon icon={stat.icon} />

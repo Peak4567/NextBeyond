@@ -11,6 +11,7 @@ import {
   faFloppyDisk,
   faCloudArrowUp,
   faImages,
+  faHeart,
 } from "@fortawesome/free-solid-svg-icons";
 import { confirmSave, notifySuccess, notifyError } from "@/lib/sweetalert";
 
@@ -179,7 +180,7 @@ export default function ProfilePage() {
 
         <div className="mt-8 grid gap-6 lg:grid-cols-2">
           {/* Edit Profile */}
-          <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
+          <div className="rounded-xl border border-gray-100 bg-white p-6 shadow-sm">
             <h2 className="text-sm font-bold text-[#003b73]">ข้อมูลส่วนตัว</h2>
 
             {profileError && (
@@ -238,7 +239,7 @@ export default function ProfilePage() {
           </div>
 
           {/* Upload Portfolio */}
-          <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
+          <div className="rounded-xl border border-gray-100 bg-white p-6 shadow-sm">
             <h2 className="text-sm font-bold text-[#003b73]">อัปโหลดเล่มผลงาน Portfolio</h2>
             <p className="mt-1 text-xs text-gray-400">
               เล่มที่อัปโหลดจะมีสถานะ &quot;รออนุมัติ&quot; จนกว่าแอดมินจะตรวจสอบและอนุมัติให้แสดงในหน้าชุมชนนักเรียน
@@ -324,7 +325,7 @@ export default function ProfilePage() {
         </div>
 
         {/* My Portfolios */}
-        <div className="mt-8 rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
+        <div className="mt-8 rounded-xl border border-gray-100 bg-white p-6 shadow-sm">
           <h2 className="text-sm font-bold text-[#003b73]">เล่มผลงานของฉัน</h2>
 
           <div className="mt-4 overflow-x-auto">
@@ -356,11 +357,13 @@ export default function ProfilePage() {
                       <td className="py-3 text-xs font-semibold text-gray-800">{p.title}</td>
                       <td className="py-3 text-xs text-gray-500">{p.faculty} • {p.university}</td>
                       <td className="py-3">
-                        <span className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold ${STATUS_LABELS[p.status].className}`}>
+                        <span className={`rounded-xl px-2.5 py-0.5 text-[10px] font-bold ${STATUS_LABELS[p.status].className}`}>
                           {STATUS_LABELS[p.status].label}
                         </span>
                       </td>
-                      <td className="py-3 text-xs text-gray-500">❤️ {p.likes}</td>
+                      <td className="py-3 text-xs text-gray-500">
+                        <FontAwesomeIcon icon={faHeart} className="text-rose-400" /> {p.likes}
+                      </td>
                     </tr>
                   ))
                 )}

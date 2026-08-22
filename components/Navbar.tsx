@@ -11,6 +11,8 @@ import {
   faChevronDown,
   faGaugeHigh,
   faIdCard,
+  faBars,
+  faXmark,
 } from "@fortawesome/free-solid-svg-icons";
 import { useSiteSettings } from "@/lib/useSiteSettings";
 
@@ -64,7 +66,7 @@ export default function Navbar() {
 
   return (
     <div className="sticky top-0 z-50 flex w-full justify-center bg-[#f8fbff]/90 pt-4 pb-2 px-4 backdrop-blur-md dark:bg-slate-900/90">
-      <header className="w-full max-w-4xl rounded-full bg-white px-6 py-3 shadow-[0_2px_15px_-3px_rgba(0,0,0,0.07),0_10px_20px_-2px_rgba(0,0,0,0.04)] border border-gray-200 dark:bg-slate-800 dark:border-slate-700">
+      <header className="w-full max-w-4xl rounded-xl bg-white px-6 py-3 shadow-[0_2px_15px_-3px_rgba(0,0,0,0.07),0_10px_20px_-2px_rgba(0,0,0,0.04)] border border-gray-200 dark:bg-slate-800 dark:border-slate-700">
         <nav className="flex items-center justify-between">
 
           {/* โลโก้ */}
@@ -101,7 +103,7 @@ export default function Navbar() {
               <div ref={menuRef} className="relative">
                 <button
                   onClick={() => setMenuOpen((prev) => !prev)}
-                  className="flex items-center gap-2 rounded-full py-1 pl-1 pr-3 text-[13px] font-semibold text-[#1e3a8a] transition-colors hover:bg-blue-50"
+                  className="flex items-center gap-2 rounded-xl py-1 pl-1 pr-3 text-[13px] font-semibold text-[#1e3a8a] transition-colors hover:bg-blue-50"
                 >
                   <span className="flex h-7 w-7 items-center justify-center rounded-full bg-blue-100 text-[#1e3a8a]">
                     <FontAwesomeIcon icon={faUserCircle} />
@@ -114,12 +116,12 @@ export default function Navbar() {
                 </button>
 
                 {menuOpen && (
-                  <div className="absolute right-0 top-[calc(100%+10px)] w-56 overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-xl">
+                  <div className="absolute right-0 top-[calc(100%+10px)] w-56 overflow-hidden rounded-xl border border-gray-100 bg-white shadow-xl">
                     <div className="border-b border-gray-100 px-4 py-3">
                       <p className="truncate text-sm font-bold text-gray-800">{user.fullName}</p>
                       <p className="truncate text-xs text-gray-400">{user.email}</p>
                       {user.role === "admin" && (
-                        <span className="mt-1 inline-block rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-700">
+                        <span className="mt-1 inline-block rounded-xl bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-700">
                           ADMIN
                         </span>
                       )}
@@ -172,23 +174,7 @@ export default function Navbar() {
             aria-label="เปิดเมนู"
             className="flex h-10 w-10 items-center justify-center rounded-lg text-gray-700 md:hidden"
           >
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-              {open ? (
-                <path
-                  d="M6 6l12 12M18 6L6 18"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                />
-              ) : (
-                <path
-                  d="M4 7h16M4 12h16M4 17h16"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                />
-              )}
-            </svg>
+            <FontAwesomeIcon icon={open ? faXmark : faBars} className="h-5 w-5" />
           </button>
         </nav>
       </header>
@@ -220,7 +206,7 @@ export default function Navbar() {
                   <p className="truncate text-[11px] text-gray-400">{user.email}</p>
                 </div>
                 {user.role === "admin" && (
-                  <span className="ml-auto shrink-0 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-700">
+                  <span className="ml-auto shrink-0 rounded-xl bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-700">
                     ADMIN
                   </span>
                 )}
@@ -229,7 +215,7 @@ export default function Navbar() {
               <Link
                 href="/profile"
                 onClick={() => setOpen(false)}
-                className="flex items-center justify-center gap-2 rounded-full border border-gray-200 bg-white px-5 py-2.5 text-center text-[15px] font-semibold text-[#1e3a8a] shadow-sm transition-all hover:bg-blue-50"
+                className="flex items-center justify-center gap-2 rounded-xl border border-gray-200 bg-white px-5 py-2.5 text-center text-[15px] font-semibold text-[#1e3a8a] shadow-sm transition-all hover:bg-blue-50"
               >
                 <FontAwesomeIcon icon={faIdCard} />
                 โปรไฟล์ของฉัน
@@ -239,7 +225,7 @@ export default function Navbar() {
                 <Link
                   href="/admin"
                   onClick={() => setOpen(false)}
-                  className="flex items-center justify-center gap-2 rounded-full border border-gray-200 bg-white px-5 py-2.5 text-center text-[15px] font-semibold text-[#1e3a8a] shadow-sm transition-all hover:bg-blue-50"
+                  className="flex items-center justify-center gap-2 rounded-xl border border-gray-200 bg-white px-5 py-2.5 text-center text-[15px] font-semibold text-[#1e3a8a] shadow-sm transition-all hover:bg-blue-50"
                 >
                   <FontAwesomeIcon icon={faGaugeHigh} />
                   ระบบหลังบ้าน
@@ -248,7 +234,7 @@ export default function Navbar() {
 
               <button
                 onClick={handleLogout}
-                className="flex items-center justify-center gap-2 rounded-full border border-gray-200 bg-white px-5 py-2.5 text-center text-[15px] font-semibold text-gray-700 shadow-sm transition-all hover:bg-gray-50 hover:text-red-600"
+                className="flex items-center justify-center gap-2 rounded-xl border border-gray-200 bg-white px-5 py-2.5 text-center text-[15px] font-semibold text-gray-700 shadow-sm transition-all hover:bg-gray-50 hover:text-red-600"
               >
                 <FontAwesomeIcon icon={faRightFromBracket} />
                 ออกจากระบบ
@@ -258,7 +244,7 @@ export default function Navbar() {
             <Link
               href="/login"
               onClick={() => setOpen(false)}
-              className="mt-5 flex items-center justify-center gap-2 rounded-full border border-gray-200 bg-white px-5 py-2.5 text-center text-[15px] font-semibold text-gray-700 shadow-sm transition-all hover:bg-gray-50 hover:text-[#002b55]"
+              className="mt-5 flex items-center justify-center gap-2 rounded-xl border border-gray-200 bg-white px-5 py-2.5 text-center text-[15px] font-semibold text-gray-700 shadow-sm transition-all hover:bg-gray-50 hover:text-[#002b55]"
             >
               <FontAwesomeIcon icon={faRightToBracket} />
               เข้าสู่ระบบ

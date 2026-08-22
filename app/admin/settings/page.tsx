@@ -243,7 +243,7 @@ function Section({
   children: React.ReactNode;
 }) {
   return (
-    <div className="mt-6 rounded-2xl border border-gray-100 bg-white p-5 shadow-sm sm:p-6">
+    <div className="mt-6 rounded-xl border border-gray-100 bg-white p-5 shadow-sm sm:p-6">
       <h2 className="flex items-center gap-2 text-sm font-bold text-[#003b73]">
         <FontAwesomeIcon icon={icon} className="text-[#005a9c]" />
         {title}

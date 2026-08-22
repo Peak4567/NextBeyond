@@ -5,7 +5,7 @@ type TeamCardProps = {
 
 export default function TeamCard({ name, role }: TeamCardProps) {
   return (
-    <div className="group flex flex-col items-center rounded-2xl bg-white p-5 text-center shadow-card transition-all duration-300 hover:-translate-y-1.5 hover:shadow-soft">
+    <div className="group flex flex-col items-center rounded-xl bg-white p-5 text-center shadow-card transition-all duration-300 hover:-translate-y-1.5 hover:shadow-soft">
       <div className="relative h-24 w-24 overflow-hidden rounded-full bg-gradient-to-br from-navy-900 to-navy-950 ring-4 ring-primary-50 transition-all group-hover:ring-primary-200">
         <svg
           viewBox="0 0 24 24"

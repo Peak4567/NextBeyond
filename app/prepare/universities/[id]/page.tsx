@@ -10,6 +10,7 @@ import {
   faArrowLeftLong,
   faListCheck,
   faBuildingColumns,
+  faArrowUpRightFromSquare,
 } from "@fortawesome/free-solid-svg-icons";
 import AdmissionDetailModal, {
   type AdmissionDetails,
@@ -53,7 +54,7 @@ function UniversityLogo({ universityId, university }: { universityId: string; un
 
   if (failed) {
     return (
-      <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-2xl bg-white/10 text-3xl text-white">
+      <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-xl bg-white/10 text-3xl text-white">
         <FontAwesomeIcon icon={faBuildingColumns} />
       </div>
     );
@@ -64,7 +65,7 @@ function UniversityLogo({ universityId, university }: { universityId: string; un
       src={`https://assets.mytcas.com/i/logo/${universityId}.png`}
       alt={university}
       onError={() => setFailed(true)}
-      className="h-20 w-20 shrink-0 rounded-2xl border border-white/20 bg-white object-contain p-2"
+      className="h-20 w-20 shrink-0 rounded-xl border border-white/20 bg-white object-contain p-2"
     />
   );
 }
@@ -136,7 +137,7 @@ export default function UniversityDetailPage() {
         </Link>
 
         {/* Header */}
-        <div className="mt-3 flex items-center gap-4 rounded-3xl bg-gradient-to-br from-[#002b55] via-[#004b8d] to-[#0066c4] p-6 text-white shadow-sm">
+        <div className="mt-3 flex items-center gap-4 rounded-xl bg-gradient-to-br from-[#002b55] via-[#004b8d] to-[#0066c4] p-6 text-white shadow-sm">
           <UniversityLogo universityId={universityId} university={university?.university ?? ""} />
           <div className="min-w-0">
             <h1 className="text-lg font-extrabold leading-snug sm:text-xl">
@@ -151,7 +152,7 @@ export default function UniversityDetailPage() {
         </div>
 
         {/* Search + round tabs */}
-        <div className="mt-6 rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
+        <div className="mt-6 rounded-xl border border-gray-100 bg-white p-5 shadow-sm">
           <input
             type="text"
             value={searchTerm}
@@ -198,11 +199,11 @@ export default function UniversityDetailPage() {
                     <span className="text-[11px] font-extrabold text-[#005a9c]">{item.faculty}</span>
                     <div className="flex items-center gap-1.5">
                       {item.isCustomPortal && (
-                        <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-bold text-emerald-700">
+                        <span className="rounded-xl bg-emerald-100 px-2 py-0.5 text-[10px] font-bold text-emerald-700">
                           {item.sourceLabel}
                         </span>
                       )}
-                      <span className="rounded-full bg-orange-100 px-2.5 py-0.5 text-[10px] font-bold text-orange-600">
+                      <span className="rounded-xl bg-orange-100 px-2.5 py-0.5 text-[10px] font-bold text-orange-600">
                         {item.roundName}
                       </span>
                     </div>
@@ -244,13 +245,25 @@ export default function UniversityDetailPage() {
 
                   <div className="mt-2 flex items-center justify-between gap-3 text-[10px] text-gray-400">
                     <span>ตรวจสอบล่าสุด: {item.verifiedAt}</span>
-                    <button
-                      onClick={() => setSelectedCriteria(item)}
-                      className="flex items-center gap-1.5 font-bold text-blue-600 hover:underline"
-                    >
-                      <FontAwesomeIcon icon={faListCheck} />
-                      ดูรายละเอียดฉบับเต็ม
-                    </button>
+                    <div className="flex items-center gap-3">
+                      <button
+                        onClick={() => setSelectedCriteria(item)}
+                        className="flex items-center gap-1.5 font-bold text-blue-600 hover:underline"
+                      >
+                        <FontAwesomeIcon icon={faListCheck} />
+                        ดูรายละเอียดฉบับเต็ม
+                      </button>
+                      <a
+                        href={item.sourceUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        onClick={(e) => e.stopPropagation()}
+                        className="flex items-center gap-1.5 rounded-lg bg-[#003b73] px-2.5 py-1 font-bold text-white hover:bg-[#004b8d]"
+                      >
+                        <FontAwesomeIcon icon={faArrowUpRightFromSquare} />
+                        สมัครสอบ
+                      </a>
+                    </div>
                   </div>
                 </div>
               ))}

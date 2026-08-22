@@ -22,7 +22,7 @@ function UniversityLogo({ universityId, university }: { universityId: string; un
 
   if (failed) {
     return (
-      <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-blue-50 text-xl text-[#005a9c]">
+      <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-xl text-[#005a9c]">
         <FontAwesomeIcon icon={faBuildingColumns} />
       </div>
     );
@@ -33,7 +33,7 @@ function UniversityLogo({ universityId, university }: { universityId: string; un
       src={`https://assets.mytcas.com/i/logo/${universityId}.png`}
       alt={university}
       onError={() => setFailed(true)}
-      className="h-16 w-16 shrink-0 rounded-2xl border border-gray-100 object-contain bg-white p-1.5"
+      className="h-16 w-16 shrink-0 rounded-xl border border-gray-100 object-contain bg-white p-1.5"
     />
   );
 }
@@ -92,11 +92,11 @@ export default function UniversitiesSelectorPage() {
         </div>
 
         {loading ? (
-          <div className="rounded-2xl border border-dashed border-gray-200 bg-white p-10 text-center text-xs text-gray-400">
+          <div className="rounded-xl border border-dashed border-gray-200 bg-white p-10 text-center text-xs text-gray-400">
             กำลังโหลดรายชื่อมหาวิทยาลัย...
           </div>
         ) : filtered.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-gray-200 bg-white p-10 text-center text-xs text-gray-400">
+          <div className="rounded-xl border border-dashed border-gray-200 bg-white p-10 text-center text-xs text-gray-400">
             ไม่พบมหาวิทยาลัยที่ตรงกับคำค้นหา
           </div>
         ) : (
@@ -107,7 +107,7 @@ export default function UniversitiesSelectorPage() {
                 <Link
                   key={u.universityId}
                   href={`/prepare/universities/${u.universityId}`}
-                  className="flex items-center gap-4 rounded-2xl border border-gray-100 bg-white p-4 shadow-sm transition-all hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-md"
+                  className="flex items-center gap-4 rounded-xl border border-gray-100 bg-white p-4 shadow-sm transition-all hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-md"
                 >
                   <UniversityLogo universityId={u.universityId} university={u.university} />
                   <div className="min-w-0">

@@ -16,13 +16,13 @@ export default function CourseCard({
   description,
 }: CourseCardProps) {
   return (
-    <div className="group rounded-2xl border border-slate-100 bg-white p-6 shadow-card transition-all duration-300 hover:-translate-y-1.5 hover:shadow-soft">
+    <div className="group rounded-xl border border-slate-100 bg-white p-6 shadow-card transition-all duration-300 hover:-translate-y-1.5 hover:shadow-soft">
       <div className="flex items-start justify-between">
         <div>
           <h3 className="font-bold text-navy-900">{title}</h3>
           <p className="mt-1 text-xs text-slate-400">{university}</p>
         </div>
-        <span className="rounded-full bg-primary-50 px-3 py-1 text-xs font-semibold text-primary-600">
+        <span className="rounded-xl bg-primary-50 px-3 py-1 text-xs font-semibold text-primary-600">
           {price}
         </span>
       </div>

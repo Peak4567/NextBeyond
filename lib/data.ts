@@ -308,3 +308,103 @@ export async function getExamBankItems() {
   );
   return rows;
 }
+
+export interface ExamCategory extends RowDataPacket {
+  id: number;
+  code: string;
+  name: string;
+  group_name: string;
+  description: string | null;
+  color: string;
+}
+
+export interface ExamSet extends RowDataPacket {
+  id: number;
+  category_id: number;
+  title: string;
+  description: string | null;
+  duration_minutes: number;
+  question_count: number;
+}
+
+export interface ExamQuestion extends RowDataPacket {
+  id: number;
+  exam_set_id: number;
+  question_type: "mc" | "error_id" | "listening";
+  passage_text: string | null;
+  audio_path: string | null;
+  question_text: string;
+  choices: string[] | { segments: string[]; underlineIndexes: number[] };
+  correct_index: number;
+  explanation: string | null;
+  sort_order: number;
+}
+
+export async function getExamCategories() {
+  const [rows] = await pool.query<ExamCategory[]>(
+    "SELECT id, code, name, group_name, description, color FROM exam_categories ORDER BY sort_order, id"
+  );
+  return rows;
+}
+
+export async function getExamCategoryByCode(code: string) {
+  const [rows] = await pool.query<ExamCategory[]>(
+    "SELECT id, code, name, group_name, description, color FROM exam_categories WHERE code = ?",
+    [code]
+  );
+  return rows[0] ?? null;
+}
+
+export async function getExamSetsByCategory(categoryId: number) {
+  const [rows] = await pool.query<ExamSet[]>(
+    `SELECT s.id, s.category_id, s.title, s.description, s.duration_minutes,
+            (SELECT COUNT(*) FROM exam_questions q WHERE q.exam_set_id = s.id) AS question_count
+     FROM exam_sets s WHERE s.category_id = ? ORDER BY s.sort_order, s.id`,
+    [categoryId]
+  );
+  return rows;
+}
+
+export async function getExamSetById(setId: number) {
+  const [rows] = await pool.query<ExamSet[]>(
+    `SELECT s.id, s.category_id, s.title, s.description, s.duration_minutes,
+            (SELECT COUNT(*) FROM exam_questions q WHERE q.exam_set_id = s.id) AS question_count
+     FROM exam_sets s WHERE s.id = ?`,
+    [setId]
+  );
+  return rows[0] ?? null;
+}
+
+export async function getExamQuestions(examSetId: number) {
+  const [rows] = await pool.query<ExamQuestion[]>(
+    `SELECT id, exam_set_id, question_type, passage_text, audio_path, question_text, choices, correct_index, explanation, sort_order
+     FROM exam_questions WHERE exam_set_id = ? ORDER BY sort_order, id`,
+    [examSetId]
+  );
+  return rows;
+}
+
+export interface ExamAttempt extends RowDataPacket {
+  id: number;
+  exam_set_id: number;
+  score: number;
+  total: number;
+  duration_seconds: number;
+  created_at: string;
+  set_title: string;
+  category_name: string;
+}
+
+export async function getExamAttemptsForUser(userId: number) {
+  const [rows] = await pool.query<ExamAttempt[]>(
+    `SELECT a.id, a.exam_set_id, a.score, a.total, a.duration_seconds, a.created_at,
+            s.title AS set_title, c.name AS category_name
+     FROM exam_attempts a
+     JOIN exam_sets s ON s.id = a.exam_set_id
+     JOIN exam_categories c ON c.id = s.category_id
+     WHERE a.user_id = ?
+     ORDER BY a.created_at DESC`,
+    [userId]
+  );
+  return rows;
+}

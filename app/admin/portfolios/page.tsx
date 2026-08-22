@@ -81,7 +81,7 @@ export default function AdminPortfoliosPage() {
       ) : (
         <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {items.map((item) => (
-            <div key={item.id} className="overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm">
+            <div key={item.id} className="overflow-hidden rounded-xl border border-gray-100 bg-white shadow-sm">
               {item.coverImage ? (
                 <img src={item.coverImage} alt="" className="h-40 w-full object-cover" />
               ) : (

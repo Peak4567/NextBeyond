@@ -12,6 +12,7 @@ import {
   faClock,
   faArrowUpRightFromSquare,
   faRulerVertical,
+  faFilePdf,
 } from "@fortawesome/free-solid-svg-icons";
 
 export interface ScoreBadge {
@@ -86,14 +87,14 @@ export default function AdmissionDetailModal({
       <div className="absolute inset-0 bg-[#0b1e3d]/60 backdrop-blur-sm" onClick={onClose} />
 
       {/* กรอบนอก: กำหนดความมนและ clip เนื้อหาด้านในให้โค้งตามจริง ไม่มีเงา */}
-      <div className="relative w-full max-w-lg overflow-hidden rounded-[28px] bg-white">
+      <div id="admission-pdf-content" className="relative w-full max-w-lg overflow-hidden rounded-xl bg-white">
         <div className="max-h-[85vh] overflow-y-auto">
           {/* Header */}
-          <div className="sticky top-0 z-10 bg-gradient-to-br from-[#002b55] via-[#004b8d] to-[#0066c4] px-6 py-5 text-white">
+          <div className="sticky top-0 z-10 bg-gradient-to-br from-[#002b55] via-[#004b8d] to-[#0066c4] px-6 py-5 text-white print:static">
             <button
               onClick={onClose}
               aria-label="ปิด"
-              className="absolute right-4 top-4 flex h-8 w-8 items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20"
+              className="nb-no-print absolute right-4 top-4 flex h-8 w-8 items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20"
             >
               <FontAwesomeIcon icon={faXmark} />
             </button>
@@ -236,17 +237,27 @@ export default function AdmissionDetailModal({
               )}
             </section>
 
-            {item.isCustomPortal && (
-              <a
-                href={item.sourceUrl}
-                target="_blank"
-                rel="noreferrer"
-                className="flex items-center justify-center gap-2 rounded-2xl bg-[#002b55] py-3 text-xs font-extrabold text-white transition-colors hover:bg-[#004b8d]"
-              >
-                สมัครผ่านระบบของมหาวิทยาลัย: {item.sourceLabel}
-                <FontAwesomeIcon icon={faArrowUpRightFromSquare} className="text-[10px]" />
-              </a>
-            )}
+            {/* ปุ่มสมัครสอบ — ลิงก์ไปหน้าสมัครจริงของโปรแกรมนี้ (ระบบมหาวิทยาลัยเอง หรือ mytcas.com) */}
+            <a
+              href={item.sourceUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="nb-no-print flex items-center justify-center gap-2 rounded-xl bg-[#002b55] py-3.5 text-xs font-extrabold text-white shadow-md transition-all hover:-translate-y-0.5 hover:bg-[#004b8d]"
+            >
+              {item.isCustomPortal
+                ? `สมัครผ่านระบบของมหาวิทยาลัย: ${item.sourceLabel}`
+                : `ไปสมัครสอบที่นี่ — ${item.sourceLabel}`}
+              <FontAwesomeIcon icon={faArrowUpRightFromSquare} className="text-[10px]" />
+            </a>
+
+            {/* ดาวน์โหลดเกณฑ์การรับสมัครฉบับนี้เป็น PDF */}
+            <button
+              onClick={() => window.print()}
+              className="nb-no-print flex items-center justify-center gap-2 rounded-xl border-2 border-dashed border-blue-200 bg-blue-50/60 py-3 text-xs font-extrabold text-[#003b73] transition-colors hover:bg-blue-100"
+            >
+              <FontAwesomeIcon icon={faFilePdf} className="text-red-500" />
+              ดาวน์โหลดเกณฑ์นี้เป็น PDF
+            </button>
 
             {/* Footer info */}
             <div className="flex flex-wrap items-center justify-between gap-2 border-t border-gray-100 pt-4 text-[11px] text-gray-400">
@@ -254,17 +265,9 @@ export default function AdmissionDetailModal({
                 <FontAwesomeIcon icon={faUsers} />
                 รับจำนวน {item.quota.toLocaleString("th-TH")} คน · ตรวจสอบล่าสุด {item.verifiedAt}
               </span>
-              {!item.isCustomPortal && (
-                <a
-                  href={item.sourceUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="flex items-center gap-1 font-bold text-blue-600 hover:underline"
-                >
-                  อ้างอิงจาก {item.sourceLabel}
-                  <FontAwesomeIcon icon={faArrowUpRightFromSquare} className="text-[9px]" />
-                </a>
-              )}
+              <span className="flex items-center gap-1">
+                ข้อมูลอ้างอิงจาก {item.sourceLabel}
+              </span>
             </div>
           </div>
         </div>
