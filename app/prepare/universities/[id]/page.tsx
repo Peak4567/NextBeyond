@@ -64,6 +64,7 @@ function UniversityLogo({ universityId, university }: { universityId: string; un
     <img
       src={`https://assets.mytcas.com/i/logo/${universityId}.png`}
       alt={university}
+      data-no-fallback="true"
       onError={() => setFailed(true)}
       className="h-20 w-20 shrink-0 rounded-xl border border-white/20 bg-white object-contain p-2"
     />

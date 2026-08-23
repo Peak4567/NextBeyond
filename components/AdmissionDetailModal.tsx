@@ -84,25 +84,25 @@ export default function AdmissionDetailModal({
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-[#0b1e3d]/60 backdrop-blur-sm" onClick={onClose} />
+      <div className="absolute inset-0 bg-[#0b1e3d]/60" onClick={onClose} />
 
       {/* กรอบนอก: กำหนดความมนและ clip เนื้อหาด้านในให้โค้งตามจริง ไม่มีเงา */}
-      <div id="admission-pdf-content" className="relative w-full max-w-lg overflow-hidden rounded-xl bg-white">
+      <div id="admission-pdf-content" className="relative w-full max-w-lg overflow-hidden rounded-md bg-white">
         <div className="max-h-[85vh] overflow-y-auto">
           {/* Header */}
-          <div className="sticky top-0 z-10 bg-gradient-to-br from-[#002b55] via-[#004b8d] to-[#0066c4] px-6 py-5 text-white print:static">
+          <div className="sticky top-0 z-10 border-b border-gray-100 bg-gray-50 px-6 py-5 text-[#003b73] print:static">
             <button
               onClick={onClose}
               aria-label="ปิด"
-              className="nb-no-print absolute right-4 top-4 flex h-8 w-8 items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20"
+              className="nb-no-print absolute right-4 top-4 flex h-8 w-8 items-center justify-center rounded-full bg-black/5 text-gray-500 hover:bg-black/10"
             >
               <FontAwesomeIcon icon={faXmark} />
             </button>
-            <span className="inline-block rounded-full bg-amber-400 px-2.5 py-0.5 text-[10px] font-extrabold text-[#002b55]">
+            <span className="inline-block rounded-md bg-amber-100 px-2.5 py-0.5 text-[10px] font-extrabold text-amber-800">
               {item.roundName}
             </span>
-            <h2 className="mt-2 pr-8 text-base font-extrabold leading-snug">{item.university}</h2>
-            <p className="mt-0.5 text-xs text-blue-100">
+            <h2 className="mt-2 pr-8 text-base font-extrabold leading-snug text-[#003b73]">{item.university}</h2>
+            <p className="mt-0.5 text-xs text-gray-500">
               {item.faculty} - {item.major}
             </p>
           </div>
@@ -242,7 +242,7 @@ export default function AdmissionDetailModal({
               href={item.sourceUrl}
               target="_blank"
               rel="noreferrer"
-              className="nb-no-print flex items-center justify-center gap-2 rounded-xl bg-[#002b55] py-3.5 text-xs font-extrabold text-white shadow-md transition-all hover:-translate-y-0.5 hover:bg-[#004b8d]"
+              className="nb-no-print flex items-center justify-center gap-2 rounded-md bg-[#002b55] py-3.5 text-xs font-extrabold text-white shadow-md transition-all hover:-translate-y-0.5 hover:bg-[#004b8d]"
             >
               {item.isCustomPortal
                 ? `สมัครผ่านระบบของมหาวิทยาลัย: ${item.sourceLabel}`
@@ -253,7 +253,7 @@ export default function AdmissionDetailModal({
             {/* ดาวน์โหลดเกณฑ์การรับสมัครฉบับนี้เป็น PDF */}
             <button
               onClick={() => window.print()}
-              className="nb-no-print flex items-center justify-center gap-2 rounded-xl border-2 border-dashed border-blue-200 bg-blue-50/60 py-3 text-xs font-extrabold text-[#003b73] transition-colors hover:bg-blue-100"
+              className="nb-no-print flex items-center justify-center gap-2 rounded-md border-2 border-dashed border-blue-200 bg-blue-50/60 py-3 text-xs font-extrabold text-[#003b73] transition-colors hover:bg-blue-100"
             >
               <FontAwesomeIcon icon={faFilePdf} className="text-red-500" />
               ดาวน์โหลดเกณฑ์นี้เป็น PDF

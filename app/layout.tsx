@@ -5,6 +5,7 @@ import "@fortawesome/fontawesome-svg-core/styles.css";
 import "sweetalert2/dist/sweetalert2.min.css";
 import "./globals.css";
 import { getSettings } from "@/lib/settings";
+import ImageErrorFallback from "@/components/ImageErrorFallback";
 
 // ปิดการแทรก CSS ของ FontAwesome แบบ runtime (autoAddCss) แล้วใช้ CSS ไฟล์จริงแทน
 // ป้องกันปัญหาไอคอนกะพริบเป็นบล็อกสี่เหลี่ยม/ไม่มีขนาดตอนโหลดหน้าครั้งแรกหรือหลัง Fast Refresh
@@ -34,7 +35,10 @@ export default async function RootLayout({
       lang="th"
       className={`${noto.variable} ${settings.theme_default === "dark" ? "dark" : ""}`}
     >
-      <body className="font-sans antialiased">{children}</body>
+      <body className="font-sans antialiased">
+        <ImageErrorFallback />
+        {children}
+      </body>
     </html>
   );
 }

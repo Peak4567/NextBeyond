@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 450" width="800" height="450">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0b2f8a" />
+      <stop offset="100%" stop-color="#0a1e5c" />
+    </linearGradient>
+    <linearGradient id="pic" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#bcd4ff" />
+      <stop offset="100%" stop-color="#8fb4ff" />
+    </linearGradient>
+  </defs>
+
+  <rect width="800" height="450" fill="url(#bg)" />
+
+  <!-- decorative dots -->
+  <g fill="#3a5fc4" opacity="0.5">
+    <circle cx="60" cy="60" r="3" />
+    <circle cx="90" cy="60" r="3" />
+    <circle cx="60" cy="90" r="3" />
+    <circle cx="740" cy="380" r="3" />
+    <circle cx="710" cy="380" r="3" />
+    <circle cx="740" cy="410" r="3" />
+  </g>
+
+  <!-- logo mark -->
+  <g transform="translate(320,40)">
+    <rect x="0" y="0" width="34" height="34" rx="9" fill="#2f6bff" />
+    <path d="M9 24 L17 10 L25 24" stroke="#ffffff" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round" />
+    <text x="44" y="24" font-family="Arial, sans-serif" font-size="20" font-weight="700" fill="#ffffff">NextBeyond</text>
+  </g>
+
+  <!-- picture card -->
+  <g transform="translate(260,110)">
+    <rect x="0" y="0" width="220" height="150" rx="10" fill="#eaf1ff" />
+    <circle cx="16" cy="14" r="3" fill="#9db6e8" />
+    <circle cx="28" cy="14" r="3" fill="#9db6e8" />
+    <circle cx="40" cy="14" r="3" fill="#9db6e8" />
+    <rect x="12" y="26" width="196" height="112" rx="6" fill="url(#pic)" />
+    <circle cx="60" cy="60" r="14" fill="#ffffff" opacity="0.85" />
+    <path d="M20 130 L75 85 L110 115 L140 90 L200 130 Z" fill="#6f96e8" opacity="0.9" />
+
+    <!-- broken badge -->
+    <g transform="translate(178,96)">
+      <circle cx="0" cy="0" r="30" fill="#0d2c6b" stroke="#ffffff" stroke-width="3" />
+      <path d="M-10 -10 L10 10 M10 -10 L-10 10" stroke="#ffffff" stroke-width="4" stroke-linecap="round" />
+    </g>
+  </g>
+
+  <text x="400" y="320" text-anchor="middle" font-family="Arial, sans-serif" font-size="30" font-weight="800" fill="#ffffff">ไม่สามารถโหลดภาพได้</text>
+  <text x="400" y="348" text-anchor="middle" font-family="Arial, sans-serif" font-size="13" fill="#c3d3fb">ไม่สามารถโหลดภาพในขณะนี้ กรุณาลองใหม่อีกครั้งในภายหลัง</text>
+
+  <g transform="translate(320,372)">
+    <rect x="0" y="0" width="160" height="34" rx="17" fill="#2f6bff" />
+    <text x="80" y="22" text-anchor="middle" font-family="Arial, sans-serif" font-size="13" font-weight="700" fill="#ffffff">ลองใหม่อีกครั้ง</text>
+  </g>
+</svg>

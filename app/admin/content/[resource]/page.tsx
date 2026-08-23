@@ -115,7 +115,12 @@ export default function AdminResourcePage() {
     });
     if (!confirmed) return;
 
-    await fetch(`/api/admin/${resource}/${id}`, { method: "DELETE" });
+    const res = await fetch(`/api/admin/${resource}/${id}`, { method: "DELETE" });
+    if (!res.ok) {
+      const data = await res.json().catch(() => null);
+      notifyError("ลบข้อมูลไม่สำเร็จ", data?.error || `เซิร์ฟเวอร์ตอบกลับ ${res.status}`);
+      return;
+    }
     await loadItems();
     notifySuccess("ลบข้อมูลเรียบร้อยแล้ว");
   }

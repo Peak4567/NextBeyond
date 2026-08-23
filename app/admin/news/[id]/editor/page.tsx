@@ -120,7 +120,11 @@ export default function NewsBlockEditorPage() {
     });
     if (!confirmed) return;
 
-    await fetch(`/api/admin/news/blocks/${blockId}`, { method: "DELETE" });
+    const res = await fetch(`/api/admin/news/blocks/${blockId}`, { method: "DELETE" });
+    if (!res.ok) {
+      notifyError("ลบบล็อกไม่สำเร็จ", `เซิร์ฟเวอร์ตอบกลับ ${res.status}`);
+      return;
+    }
     await loadBlocks();
     notifySuccess("ลบบล็อกเรียบร้อยแล้ว");
   }

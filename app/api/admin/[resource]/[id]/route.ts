@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import type { ResultSetHeader } from "mysql2";
 import { pool } from "@/lib/db";
 import { getSessionUser } from "@/lib/auth";
 import { ADMIN_RESOURCES } from "@/lib/adminResources";
@@ -22,7 +23,20 @@ export async function DELETE(
     return NextResponse.json({ error: "รหัสไม่ถูกต้อง" }, { status: 400 });
   }
 
-  await pool.query(`DELETE FROM \`${config.table}\` WHERE id = ?`, [id]);
+  try {
+    const [result] = await pool.query<ResultSetHeader>(
+      `DELETE FROM \`${config.table}\` WHERE id = ?`,
+      [id]
+    );
+    if (result.affectedRows === 0) {
+      return NextResponse.json({ error: "ไม่พบรายการนี้ในระบบแล้ว" }, { status: 404 });
+    }
+  } catch (error) {
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : "ลบข้อมูลไม่สำเร็จ" },
+      { status: 500 }
+    );
+  }
 
   return NextResponse.json({ ok: true });
 }

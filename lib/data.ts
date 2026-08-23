@@ -177,25 +177,48 @@ export interface UniversitySummary extends RowDataPacket {
   programCount: number;
 }
 
+// ข้อมูลต้นทางจาก mytcas.com บางรายการสะกดชื่อมหาวิทยาลัยไม่ตรงกันเล็กน้อยสำหรับ university_id เดียวกัน
+// (เช่น พิมพ์ผิด 2-3 รายการจากทั้งหมดเป็นร้อย) ถ้า GROUP BY (id, ชื่อ) ตรงๆ จะได้ id ซ้ำสองแถว
+// ทำให้ React key ชนกัน จึงต้อง group ตาม id อย่างเดียว แล้วเลือกชื่อที่พบบ่อยที่สุดมาแสดงแทน
 export async function getUniversitiesList() {
   const [rows] = await pool.query<UniversitySummary[]>(
-    `SELECT university_id AS universityId, university, COUNT(*) AS programCount
-     FROM admission_criteria
-     WHERE university_id IS NOT NULL
-     GROUP BY university_id, university
-     ORDER BY university`
+    `SELECT ids.university_id AS universityId, names.university, ids.programCount
+     FROM (
+       SELECT university_id, COUNT(*) AS programCount
+       FROM admission_criteria
+       WHERE university_id IS NOT NULL
+       GROUP BY university_id
+     ) ids
+     JOIN (
+       SELECT university_id, university,
+              ROW_NUMBER() OVER (PARTITION BY university_id ORDER BY COUNT(*) DESC) AS rn
+       FROM admission_criteria
+       WHERE university_id IS NOT NULL
+       GROUP BY university_id, university
+     ) names ON names.university_id = ids.university_id AND names.rn = 1
+     ORDER BY names.university`
   );
   return rows;
 }
 
 export async function getUniversityInfo(universityId: string) {
   const [rows] = await pool.query<UniversitySummary[]>(
-    `SELECT university_id AS universityId, university, COUNT(*) AS programCount
-     FROM admission_criteria
-     WHERE university_id = ?
-     GROUP BY university_id, university
+    `SELECT ids.university_id AS universityId, names.university, ids.programCount
+     FROM (
+       SELECT university_id, COUNT(*) AS programCount
+       FROM admission_criteria
+       WHERE university_id = ?
+       GROUP BY university_id
+     ) ids
+     JOIN (
+       SELECT university_id, university,
+              ROW_NUMBER() OVER (PARTITION BY university_id ORDER BY COUNT(*) DESC) AS rn
+       FROM admission_criteria
+       WHERE university_id = ?
+       GROUP BY university_id, university
+     ) names ON names.university_id = ids.university_id AND names.rn = 1
      LIMIT 1`,
-    [universityId]
+    [universityId, universityId]
   );
   return rows[0] ?? null;
 }

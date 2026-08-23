@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import type { ResultSetHeader } from "mysql2";
 import { pool } from "@/lib/db";
 import { getSessionUser } from "@/lib/auth";
 
@@ -34,7 +35,13 @@ export async function DELETE(
     return NextResponse.json({ error: "ไม่มีสิทธิ์เข้าถึง" }, { status: 403 });
   }
 
-  await pool.query("DELETE FROM news_blocks WHERE id = ?", [Number(params.blockId)]);
+  const [result] = await pool.query<ResultSetHeader>(
+    "DELETE FROM news_blocks WHERE id = ?",
+    [Number(params.blockId)]
+  );
+  if (result.affectedRows === 0) {
+    return NextResponse.json({ error: "ไม่พบบล็อกนี้ในระบบแล้ว" }, { status: 404 });
+  }
 
   return NextResponse.json({ ok: true });
 }
