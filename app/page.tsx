@@ -377,42 +377,44 @@ export default async function Home() {
           </div>
         </section>
 
-        <section className="mx-auto max-w-7xl px-6 py-20 lg:px-10">
-          <div className="text-center mb-16">
-            <h2 className="text-2xl font-bold text-[#003b73] sm:text-3xl">
-              ผู้พัฒนา NextBeyond
-            </h2>
-            <p className="mt-2 text-sm text-gray-500">
-              ทีมงานผู้เชี่ยวชาญที่มุ่งมั่นพัฒนาระบบแนะแนวการศึกษาที่มีประสิทธิภาพสูงสุดสำหรับคุณ
-            </p>
-          </div>
+        {TEAM.length > 0 && (
+          <section className="mx-auto max-w-7xl px-6 py-20 lg:px-10">
+            <div className="text-center mb-16">
+              <h2 className="text-2xl font-bold text-[#003b73] sm:text-3xl">
+                ผู้พัฒนา NextBeyond
+              </h2>
+              <p className="mt-2 text-sm text-gray-500">
+                ทีมงานผู้เชี่ยวชาญที่มุ่งมั่นพัฒนาระบบแนะแนวการศึกษาที่มีประสิทธิภาพสูงสุดสำหรับคุณ
+              </p>
+            </div>
 
-          <div className="mt-12 grid gap-x-6 gap-y-16 sm:grid-cols-2 lg:grid-cols-3">
-            {TEAM.map((member) => (
-              <div
-                key={member.id}
-                className="relative flex items-center rounded-xl bg-white px-6 py-6 shadow-[0_8px_30px_rgb(0,0,0,0.06)] min-h-[110px]"
-              >
-                <div className="z-10 w-3/5">
-                  <h4 className="text-[17px] font-bold text-[#1e3a8a]">
-                    {member.name}
-                  </h4>
-                  <p className="text-[11px] font-bold text-gray-900 mt-0.5">
-                    {member.role}
-                  </p>
-                </div>
+            <div className="mt-12 grid gap-x-6 gap-y-16 sm:grid-cols-2 lg:grid-cols-3">
+              {TEAM.map((member) => (
+                <div
+                  key={member.id}
+                  className="relative flex items-center rounded-xl bg-white px-6 py-6 shadow-[0_8px_30px_rgb(0,0,0,0.06)] min-h-[110px]"
+                >
+                  <div className="z-10 w-3/5">
+                    <h4 className="text-[17px] font-bold text-[#1e3a8a]">
+                      {member.name}
+                    </h4>
+                    <p className="text-[11px] font-bold text-gray-900 mt-0.5">
+                      {member.role}
+                    </p>
+                  </div>
 
-                <div className="absolute bottom-0 right-4 h-[160px] w-auto">
-                  <img
-                    src={member.image}
-                    alt={member.name}
-                    className="h-full w-full object-contain object-bottom drop-shadow-lg"
-                  />
+                  <div className="absolute bottom-0 right-4 h-[160px] w-auto">
+                    <img
+                      src={member.image}
+                      alt={member.name}
+                      className="h-full w-full object-contain object-bottom drop-shadow-lg"
+                    />
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
-        </section>
+              ))}
+            </div>
+          </section>
+        )}
       </main>
 
       <Footer />
