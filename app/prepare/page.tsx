@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Navbar from "@/components/Navbar";
@@ -79,6 +79,14 @@ interface ExamBankItem {
 }
 
 export default function PreparePage() {
+  return (
+    <Suspense fallback={null}>
+      <PreparePageContent />
+    </Suspense>
+  );
+}
+
+function PreparePageContent() {
   const searchParams = useSearchParams();
   const [searchTerm, setSearchTerm] = useState(searchParams.get("q") ?? "");
   const [selectedRound, setSelectedRound] = useState("");

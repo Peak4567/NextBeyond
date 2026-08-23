@@ -1,4 +1,4 @@
-import { writeFile } from "fs/promises";
+import { mkdir, writeFile } from "fs/promises";
 import path from "path";
 import crypto from "crypto";
 
@@ -18,7 +18,11 @@ export async function saveUploadedImage(file: File, folder: UploadFolder): Promi
   const ext = file.type.split("/")[1] === "jpeg" ? "jpg" : file.type.split("/")[1];
   const filename = `${Date.now()}-${crypto.randomBytes(6).toString("hex")}.${ext}`;
   const relativePath = `/uploads/${folder}/${filename}`;
-  const absolutePath = path.join(process.cwd(), "public", "uploads", folder, filename);
+  const uploadDir = path.join(process.cwd(), "public", "uploads", folder);
+  const absolutePath = path.join(uploadDir, filename);
+
+  // สร้างโฟลเดอร์ปลายทางถ้ายังไม่มี — กัน ENOENT บนเซิร์ฟเวอร์ที่เพิ่ง deploy ใหม่
+  await mkdir(uploadDir, { recursive: true });
 
   const buffer = Buffer.from(await file.arrayBuffer());
   await writeFile(absolutePath, buffer);

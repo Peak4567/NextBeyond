@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Navbar from "@/components/Navbar";
@@ -41,6 +41,14 @@ interface ReviewItem {
 }
 
 export default function TakeExamPage() {
+  return (
+    <Suspense fallback={null}>
+      <TakeExamContent />
+    </Suspense>
+  );
+}
+
+function TakeExamContent() {
   const params = useParams<{ code: string }>();
   const searchParams = useSearchParams();
   const router = useRouter();
