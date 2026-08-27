@@ -81,6 +81,7 @@ interface TcasCourse {
   faculty_name_th: string;
   program_name_th: string;
   program_type_name_th: string;
+  major_name_th?: string;
 }
 
 interface TcasFolio {
@@ -92,6 +93,8 @@ interface TcasRound {
   type: string;
   receive_student_number: number;
   link: string;
+  project_id?: string;
+  project_name_th?: string;
   description?: string;
   condition?: string;
   interview_date?: string;
@@ -294,6 +297,8 @@ type CriteriaRow = [
   string, // university_id
   string, // faculty
   string, // major
+  string | null, // concentration (แขนงวิชา/โครงการย่อยภายในหลักสูตรเดียวกัน ถ้ามี)
+  string | null, // project_name (ชื่อโครงการรับสมัครย่อยภายในรอบเดียวกัน ถ้ามี)
   string, // round
   string, // round_name
   number, // quota
@@ -303,13 +308,49 @@ type CriteriaRow = [
   string, // criteria
   string, // source_url
   string, // source_label
+  string | null, // pdf_url
   number, // source_is_custom
   string // verified_at
 ];
 
+// รวมคีย์เฉพาะของแต่ละแถวเกณฑ์รับสมัคร ใช้จับคู่ก่อน/หลังซิงก์ เพื่อรักษาลิงก์ PDF ที่แอดมินเพิ่มไว้ด้วยมือ
+function criteriaKey(
+  university: string,
+  faculty: string,
+  major: string,
+  concentration: string | null,
+  projectName: string | null,
+  round: string,
+  academicYear: string
+) {
+  return `${university}|${faculty}|${major}|${concentration ?? ""}|${projectName ?? ""}|${round}|${academicYear}`;
+}
+
 export async function runAdmissionSync(): Promise<AdmissionSyncResult> {
   const start = Date.now();
-  const [courses, portalOverrides] = await Promise.all([fetchAllCourses(), fetchPortalOverrides()]);
+  const [courses, portalOverrides, existingPdfRows] = await Promise.all([
+    fetchAllCourses(),
+    fetchPortalOverrides(),
+    pool.query<RowDataPacket[]>(
+      "SELECT university, faculty, major, concentration, project_name, round, academic_year, pdf_url FROM admission_criteria WHERE pdf_url IS NOT NULL"
+    ),
+  ]);
+
+  const preservedPdfUrls = new Map<string, string>();
+  for (const row of existingPdfRows[0]) {
+    preservedPdfUrls.set(
+      criteriaKey(
+        row.university,
+        row.faculty,
+        row.major,
+        row.concentration,
+        row.project_name,
+        row.round,
+        row.academic_year
+      ),
+      row.pdf_url
+    );
+  }
 
   const verifiedAt = new Date().toLocaleDateString("th-TH", {
     day: "2-digit",
@@ -351,13 +392,31 @@ export async function runAdmissionSync(): Promise<AdmissionSyncResult> {
 
       const sourceUrl = portalOverride?.url || round.link?.trim() || `https://course.mytcas.com/programs/${course.program_id}`;
       const sourceLabel = portalOverride?.label || "TCAS70 (mytcas.com)";
+      const finalAcademicYear = academicYear || "2570";
+      const finalMajor = `${course.program_name_th} (${course.program_type_name_th})`;
+      const concentration = course.major_name_th?.trim() || null;
+      const projectName = round.project_name_th?.trim() || null;
+      const preservedPdfUrl =
+        preservedPdfUrls.get(
+          criteriaKey(
+            course.university_name_th,
+            course.faculty_name_th,
+            finalMajor,
+            concentration,
+            projectName,
+            roundNum,
+            finalAcademicYear
+          )
+        ) ?? null;
 
       rows.push([
-        academicYear || "2570",
+        finalAcademicYear,
         course.university_name_th,
         course.university_id,
         course.faculty_name_th,
-        `${course.program_name_th} (${course.program_type_name_th})`,
+        finalMajor,
+        concentration,
+        projectName,
         roundNum,
         roundName,
         round.receive_student_number,
@@ -367,6 +426,7 @@ export async function runAdmissionSync(): Promise<AdmissionSyncResult> {
         buildCriteriaSummary(badges, closedDate, openInfo?.short ?? null, roundName, round.receive_student_number),
         sourceUrl,
         sourceLabel,
+        preservedPdfUrl,
         portalOverride ? 1 : 0,
         verifiedAt,
       ]);
@@ -377,14 +437,15 @@ export async function runAdmissionSync(): Promise<AdmissionSyncResult> {
 
   const rows = rowLists.flat();
 
-  await pool.query("DELETE FROM admission_criteria");
+  // is_manual = 1 คือแถวที่เพิ่มด้วยมือจากเว็บมหาวิทยาลัยที่ไม่มีอยู่ใน mytcas.com (เช่น เกษตรศาสตร์) ต้องไม่ถูกลบทิ้ง
+  await pool.query("DELETE FROM admission_criteria WHERE is_manual = 0");
 
   const columns =
-    "(academic_year, university, university_id, faculty, major, round, round_name, quota, gpax_min, score_breakdown, details_json, criteria, source_url, source_label, source_is_custom, verified_at)";
+    "(academic_year, university, university_id, faculty, major, concentration, project_name, round, round_name, quota, gpax_min, score_breakdown, details_json, criteria, source_url, source_label, pdf_url, source_is_custom, verified_at)";
 
   for (let i = 0; i < rows.length; i += 500) {
     const chunk = rows.slice(i, i + 500);
-    const placeholders = chunk.map(() => "(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)").join(",");
+    const placeholders = chunk.map(() => "(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)").join(",");
     await pool.query(
       `INSERT INTO admission_criteria ${columns} VALUES ${placeholders}`,
       chunk.flat()

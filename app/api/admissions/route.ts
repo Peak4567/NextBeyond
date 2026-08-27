@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getAdmissionCriteria } from "@/lib/data";
+import { getAdmissionCriteria, getRandomPdfShowcase } from "@/lib/data";
 import { getSettings } from "@/lib/settings";
 
 export const dynamic = "force-dynamic";
@@ -13,13 +13,16 @@ export async function GET(request: Request) {
   const q = searchParams.get("q")?.trim() || undefined;
   const round = searchParams.get("round")?.trim() || undefined;
   const universityId = searchParams.get("universityId")?.trim() || undefined;
+  const pdfStatusRaw = searchParams.get("pdfStatus")?.trim();
+  const pdfStatus = pdfStatusRaw === "has" || pdfStatusRaw === "none" ? pdfStatusRaw : undefined;
+  const showcase = searchParams.get("showcase") === "1";
   const requestedLimit = Number(searchParams.get("limit"));
   const limit = Number.isFinite(requestedLimit) && requestedLimit > 0
-    ? Math.min(requestedLimit, 500)
+    ? Math.min(requestedLimit, 3000)
     : 50;
 
   const [{ items, total }, settings] = await Promise.all([
-    getAdmissionCriteria({ q, round, universityId, limit }),
+    showcase ? getRandomPdfShowcase(10, 3) : getAdmissionCriteria({ q, round, universityId, pdfStatus, limit }),
     getSettings(),
   ]);
 

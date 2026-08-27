@@ -8,6 +8,8 @@ export interface AdmissionCriteria extends RowDataPacket {
   universityId: string | null;
   faculty: string;
   major: string;
+  concentration: string | null;
+  projectName: string | null;
   round: string;
   roundName: string;
   quota: number;
@@ -17,6 +19,7 @@ export interface AdmissionCriteria extends RowDataPacket {
   criteria: string;
   sourceUrl: string;
   sourceLabel: string;
+  pdfUrl: string | null;
   sourceIsCustom: number;
   verifiedAt: string;
 }
@@ -127,19 +130,20 @@ export interface AdmissionCriteriaQuery {
   q?: string;
   round?: string;
   universityId?: string;
+  pdfStatus?: "has" | "none";
   limit?: number;
 }
 
 export async function getAdmissionCriteria(params: AdmissionCriteriaQuery = {}) {
-  const { q, round, universityId, limit = 50 } = params;
+  const { q, round, universityId, pdfStatus, limit = 50 } = params;
 
   const conditions: string[] = [];
   const values: (string | number)[] = [];
 
   if (q) {
-    conditions.push("(university LIKE ? OR faculty LIKE ? OR major LIKE ?)");
+    conditions.push("(university LIKE ? OR faculty LIKE ? OR major LIKE ? OR concentration LIKE ? OR project_name LIKE ?)");
     const like = `%${q}%`;
-    values.push(like, like, like);
+    values.push(like, like, like, like, like);
   }
   if (round) {
     conditions.push("round = ?");
@@ -148,6 +152,11 @@ export async function getAdmissionCriteria(params: AdmissionCriteriaQuery = {}) 
   if (universityId) {
     conditions.push("university_id = ?");
     values.push(universityId);
+  }
+  if (pdfStatus === "has") {
+    conditions.push("pdf_url IS NOT NULL");
+  } else if (pdfStatus === "none") {
+    conditions.push("pdf_url IS NULL");
   }
 
   const whereClause = conditions.length ? `WHERE ${conditions.join(" AND ")}` : "";
@@ -159,10 +168,11 @@ export async function getAdmissionCriteria(params: AdmissionCriteriaQuery = {}) 
   const total = countRows[0]?.total ?? 0;
 
   const [rows] = await pool.query<AdmissionCriteria[]>(
-    `SELECT id, academic_year AS academicYear, university, university_id AS universityId, faculty, major, round,
+    `SELECT id, academic_year AS academicYear, university, university_id AS universityId, faculty, major, concentration,
+            project_name AS projectName, round,
             round_name AS roundName, quota, gpax_min AS gpaxMin, score_breakdown AS scoreBreakdown,
             details_json AS detailsJson, criteria,
-            source_url AS sourceUrl, source_label AS sourceLabel, source_is_custom AS sourceIsCustom,
+            source_url AS sourceUrl, source_label AS sourceLabel, pdf_url AS pdfUrl, source_is_custom AS sourceIsCustom,
             verified_at AS verifiedAt
      FROM admission_criteria ${whereClause} ORDER BY university, quota DESC LIMIT ?`,
     [...values, limit]
@@ -171,10 +181,46 @@ export async function getAdmissionCriteria(params: AdmissionCriteriaQuery = {}) 
   return { items: rows, total };
 }
 
+// สุ่มมหาวิทยาลัยที่มีประกาศ PDF แล้วมาโชว์ตอนหน้ายังไม่ถูกค้นหา/กรองอะไร (หน้า default ของ /prepare)
+// เพื่อไม่ให้ผู้ใช้เจอรายการที่ "ยังไม่มีประกาศมา" เต็มหน้าตั้งแต่แรกเข้า
+export async function getRandomPdfShowcase(universityCount = 10, perUniversity = 3) {
+  const [uniRows] = await pool.query<RowDataPacket[]>(
+    "SELECT DISTINCT university_id FROM admission_criteria WHERE pdf_url IS NOT NULL AND university_id IS NOT NULL"
+  );
+  const allIds = uniRows.map((r) => r.university_id as string);
+  const shuffled = [...allIds].sort(() => Math.random() - 0.5);
+  const chosenIds = shuffled.slice(0, universityCount);
+
+  if (chosenIds.length === 0) {
+    return { items: [] as AdmissionCriteria[], total: 0, universityCount: 0 };
+  }
+
+  const placeholders = chosenIds.map(() => "?").join(",");
+  const [rows] = await pool.query<AdmissionCriteria[]>(
+    `SELECT * FROM (
+       SELECT id, academic_year AS academicYear, university, university_id AS universityId, faculty, major, concentration,
+              project_name AS projectName, round,
+              round_name AS roundName, quota, gpax_min AS gpaxMin, score_breakdown AS scoreBreakdown,
+              details_json AS detailsJson, criteria,
+              source_url AS sourceUrl, source_label AS sourceLabel, pdf_url AS pdfUrl, source_is_custom AS sourceIsCustom,
+              verified_at AS verifiedAt,
+              ROW_NUMBER() OVER (PARTITION BY university_id ORDER BY RAND()) AS rn
+       FROM admission_criteria
+       WHERE pdf_url IS NOT NULL AND university_id IN (${placeholders})
+     ) ranked
+     WHERE rn <= ?
+     ORDER BY university`,
+    [...chosenIds, perUniversity]
+  );
+
+  return { items: rows, total: rows.length, universityCount: chosenIds.length };
+}
+
 export interface UniversitySummary extends RowDataPacket {
   universityId: string | null;
   university: string;
   programCount: number;
+  hasPdf: number;
 }
 
 // ข้อมูลต้นทางจาก mytcas.com บางรายการสะกดชื่อมหาวิทยาลัยไม่ตรงกันเล็กน้อยสำหรับ university_id เดียวกัน
@@ -182,7 +228,8 @@ export interface UniversitySummary extends RowDataPacket {
 // ทำให้ React key ชนกัน จึงต้อง group ตาม id อย่างเดียว แล้วเลือกชื่อที่พบบ่อยที่สุดมาแสดงแทน
 export async function getUniversitiesList() {
   const [rows] = await pool.query<UniversitySummary[]>(
-    `SELECT ids.university_id AS universityId, names.university, ids.programCount
+    `SELECT ids.university_id AS universityId, names.university, ids.programCount,
+            IF(pdfs.pdfCount > 0, 1, 0) AS hasPdf
      FROM (
        SELECT university_id, COUNT(*) AS programCount
        FROM admission_criteria
@@ -196,6 +243,12 @@ export async function getUniversitiesList() {
        WHERE university_id IS NOT NULL
        GROUP BY university_id, university
      ) names ON names.university_id = ids.university_id AND names.rn = 1
+     LEFT JOIN (
+       SELECT university_id, COUNT(*) AS pdfCount
+       FROM admission_criteria
+       WHERE university_id IS NOT NULL AND pdf_url IS NOT NULL
+       GROUP BY university_id
+     ) pdfs ON pdfs.university_id = ids.university_id
      ORDER BY names.university`
   );
   return rows;

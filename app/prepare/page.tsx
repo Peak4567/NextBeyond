@@ -10,7 +10,8 @@ import {
   faListCheck,
   faBuildingColumns,
   faMagnifyingGlass,
-  faArrowUpRightFromSquare,
+  faFilePdf,
+  faCircleInfo,
 } from "@fortawesome/free-solid-svg-icons";
 import AdmissionDetailModal, {
   type AdmissionDetails,
@@ -21,8 +22,11 @@ interface AdmissionCriteriaItem {
   id: number;
   academicYear: string;
   university: string;
+  universityId: string | null;
   faculty: string;
   major: string;
+  concentration: string | null;
+  projectName: string | null;
   round: string;
   roundName: string;
   quota: number;
@@ -34,6 +38,7 @@ interface AdmissionCriteriaItem {
   sourceLabel: string;
   isCustomPortal: boolean;
   verifiedAt: string;
+  pdfUrl: string | null;
 }
 
 const ROUND_TABS = [
@@ -42,6 +47,12 @@ const ROUND_TABS = [
   { value: "2", label: "รอบ 2 Quota" },
   { value: "3", label: "รอบ 3 Admission" },
   { value: "4", label: "รอบ 4 Direct Admission" },
+];
+
+const PDF_STATUS_TABS: { value: "" | "has" | "none"; label: string }[] = [
+  { value: "", label: "ทั้งหมด" },
+  { value: "has", label: "มีประกาศ PDF แล้ว" },
+  { value: "none", label: "ยังไม่มีประกาศ" },
 ];
 
 interface AdmissionApiResponse {
@@ -90,6 +101,21 @@ function PreparePageContent() {
   const searchParams = useSearchParams();
   const [searchTerm, setSearchTerm] = useState(searchParams.get("q") ?? "");
   const [selectedRound, setSelectedRound] = useState("");
+  const [selectedPdfStatus, setSelectedPdfStatus] = useState<"" | "has" | "none">("");
+  const [hasInteracted, setHasInteracted] = useState(() => Boolean(searchParams.get("q")?.trim()));
+
+  const handleSearchChange = (value: string) => {
+    setHasInteracted(true);
+    setSearchTerm(value);
+  };
+  const handleRoundChange = (value: string) => {
+    setHasInteracted(true);
+    setSelectedRound(value);
+  };
+  const handlePdfStatusChange = (value: "" | "has" | "none") => {
+    setHasInteracted(true);
+    setSelectedPdfStatus(value);
+  };
   const [criteria, setCriteria] = useState<AdmissionCriteriaItem[]>([]);
   const [criteriaTotal, setCriteriaTotal] = useState(0);
   const [selectedCriteria, setSelectedCriteria] = useState<AdmissionCriteriaItem | null>(null);
@@ -150,8 +176,13 @@ function PreparePageContent() {
     const timeout = setTimeout(async () => {
       try {
         const params = new URLSearchParams();
-        if (searchTerm.trim()) params.set("q", searchTerm.trim());
-        if (selectedRound) params.set("round", selectedRound);
+        if (!hasInteracted) {
+          params.set("showcase", "1");
+        } else {
+          if (searchTerm.trim()) params.set("q", searchTerm.trim());
+          if (selectedRound) params.set("round", selectedRound);
+          if (selectedPdfStatus) params.set("pdfStatus", selectedPdfStatus);
+        }
 
         const response = await fetch(`/api/admissions?${params.toString()}`, {
           signal: controller.signal,
@@ -176,7 +207,7 @@ function PreparePageContent() {
       clearTimeout(timeout);
       controller.abort();
     };
-  }, [searchTerm, selectedRound]);
+  }, [searchTerm, selectedRound, selectedPdfStatus, hasInteracted]);
 
   // สลับสถานะของ Checklist
   const toggleChecklist = (id: number) => {
@@ -235,13 +266,13 @@ function PreparePageContent() {
                   <input
                     type="text"
                     value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
+                    onChange={(e) => handleSearchChange(e.target.value)}
                     placeholder="พิมพ์คณะ สาขา หรือ มหาวิทยาลัยที่สนใจ..."
                     className="w-full rounded-xl border border-gray-200 bg-gray-50/50 py-2.5 pl-9 pr-4 text-xs text-gray-700 outline-none transition-all focus:border-blue-500 focus:bg-white"
                   />
                   {searchTerm && (
                     <button
-                      onClick={() => setSearchTerm("")}
+                      onClick={() => handleSearchChange("")}
                       className="absolute inset-y-0 right-0 flex items-center pr-3 text-xs text-gray-400 hover:text-gray-600"
                     >
                       ✕
@@ -255,13 +286,36 @@ function PreparePageContent() {
                 {ROUND_TABS.map((tab) => (
                   <button
                     key={tab.value}
-                    onClick={() => setSelectedRound(tab.value)}
+                    onClick={() => handleRoundChange(tab.value)}
                     className={`rounded-xl px-3.5 py-2 text-xs font-bold transition-all ${
                       selectedRound === tab.value
                         ? "bg-[#003b73] text-white shadow-md"
                         : "bg-gray-100 text-gray-600 hover:bg-blue-50 hover:text-[#003b73]"
                     }`}
                   >
+                    {tab.label}
+                  </button>
+                ))}
+              </div>
+
+              {/* ปุ่มกรองตามสถานะประกาศ PDF */}
+              <div className="mt-2 flex flex-wrap gap-2">
+                {PDF_STATUS_TABS.map((tab) => (
+                  <button
+                    key={tab.value}
+                    onClick={() => handlePdfStatusChange(tab.value)}
+                    className={`flex items-center gap-1.5 rounded-xl px-3.5 py-2 text-xs font-bold transition-all ${
+                      selectedPdfStatus === tab.value
+                        ? tab.value === "has"
+                          ? "bg-emerald-600 text-white shadow-md"
+                          : tab.value === "none"
+                            ? "bg-gray-500 text-white shadow-md"
+                            : "bg-[#003b73] text-white shadow-md"
+                        : "bg-gray-100 text-gray-600 hover:bg-blue-50 hover:text-[#003b73]"
+                    }`}
+                  >
+                    {tab.value === "has" && <FontAwesomeIcon icon={faFilePdf} />}
+                    {tab.value === "none" && <FontAwesomeIcon icon={faCircleInfo} />}
                     {tab.label}
                   </button>
                 ))}
@@ -286,7 +340,7 @@ function PreparePageContent() {
                 {TRENDING_TAGS.map((tag) => (
                   <button
                     key={tag}
-                    onClick={() => setSearchTerm(tag)}
+                    onClick={() => handleSearchChange(tag)}
                     className={`rounded-lg px-2.5 py-1 text-[11px] transition-colors ${
                       searchTerm === tag
                         ? "bg-blue-600 text-white font-bold"
@@ -307,8 +361,11 @@ function PreparePageContent() {
                 ) : criteria.length > 0 ? (
                   <>
                     <p className="text-[11px] text-gray-400">
-                      พบ {criteriaTotal.toLocaleString("th-TH")} รายการ
-                      {criteriaTotal > criteria.length ? ` — แสดง ${criteria.length} รายการแรก` : ""}
+                      {!hasInteracted
+                        ? `ตัวอย่างเกณฑ์ที่มีประกาศ PDF พร้อมแล้ว จากมหาวิทยาลัยสุ่ม ${criteriaTotal.toLocaleString("th-TH")} รายการ`
+                        : `พบ ${criteriaTotal.toLocaleString("th-TH")} รายการ${
+                            criteriaTotal > criteria.length ? ` — แสดง ${criteria.length} รายการแรก` : ""
+                          }`}
                     </p>
                     {criteria.map((item) => (
                       <div
@@ -333,6 +390,14 @@ function PreparePageContent() {
                         <h4 className="mt-1 text-xs font-bold text-gray-800">
                           {item.faculty} - {item.major}
                         </h4>
+                        {item.projectName && (
+                          <p className="mt-1 text-xs font-bold text-[#003b73]">โครงการ: {item.projectName}</p>
+                        )}
+                        {item.concentration && (
+                          <span className="mt-1 inline-block rounded-md bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-700">
+                            แขนงวิชา: {item.concentration}
+                          </span>
+                        )}
                         <div className="mt-2 flex flex-wrap items-center gap-4 text-[11px] text-gray-500">
                           <span>จำนวนรับ: <strong className="text-gray-700">{item.quota} คน</strong></span>
                           <span>GPAX ขั้นต่ำ: <strong className="text-gray-700">{item.gpaxMin}</strong></span>
@@ -378,16 +443,23 @@ function PreparePageContent() {
                               <FontAwesomeIcon icon={faListCheck} />
                               ดูรายละเอียดฉบับเต็ม
                             </button>
-                            <a
-                              href={item.sourceUrl}
-                              target="_blank"
-                              rel="noreferrer"
-                              onClick={(e) => e.stopPropagation()}
-                              className="flex items-center gap-1.5 rounded-lg bg-[#003b73] px-2.5 py-1 font-bold text-white hover:bg-[#004b8d]"
-                            >
-                              <FontAwesomeIcon icon={faArrowUpRightFromSquare} />
-                              สมัครสอบ
-                            </a>
+                            {item.pdfUrl ? (
+                              <a
+                                href={item.pdfUrl}
+                                target="_blank"
+                                rel="noreferrer"
+                                onClick={(e) => e.stopPropagation()}
+                                className="flex items-center gap-1.5 rounded-lg bg-[#003b73] px-2.5 py-1 font-bold text-white hover:bg-[#004b8d]"
+                              >
+                                <FontAwesomeIcon icon={faFilePdf} />
+                                ประกาศ PDF
+                              </a>
+                            ) : (
+                              <span className="flex items-center gap-1.5 rounded-lg bg-gray-100 px-2.5 py-1 font-bold text-gray-400">
+                                <FontAwesomeIcon icon={faCircleInfo} />
+                                ยังไม่มีประกาศมา
+                              </span>
+                            )}
                           </div>
                         </div>
                       </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faXmark,
@@ -10,9 +10,10 @@ import {
   faUsers,
   faLocationDot,
   faClock,
-  faArrowUpRightFromSquare,
   faRulerVertical,
   faFilePdf,
+  faCircleInfo,
+  faFloppyDisk,
 } from "@fortawesome/free-solid-svg-icons";
 
 export interface ScoreBadge {
@@ -42,8 +43,12 @@ export interface AdmissionDetails {
 export interface AdmissionCriteriaItem {
   id: number;
   university: string;
+  universityId?: string | null;
+  round?: string;
   faculty: string;
   major: string;
+  concentration?: string | null;
+  projectName?: string | null;
   roundName: string;
   quota: number;
   gpaxMin: string;
@@ -53,6 +58,7 @@ export interface AdmissionCriteriaItem {
   sourceLabel: string;
   isCustomPortal?: boolean;
   verifiedAt: string;
+  pdfUrl: string | null;
 }
 
 export default function AdmissionDetailModal({
@@ -62,6 +68,31 @@ export default function AdmissionDetailModal({
   item: AdmissionCriteriaItem | null;
   onClose: () => void;
 }) {
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [pdfUrl, setPdfUrl] = useState<string | null>(null);
+  const [editingPdf, setEditingPdf] = useState(false);
+  const [pdfInput, setPdfInput] = useState("");
+  const [applyToWholeBatch, setApplyToWholeBatch] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState("");
+  const [saveNotice, setSaveNotice] = useState("");
+
+  useEffect(() => {
+    fetch("/api/auth/me")
+      .then((res) => res.json())
+      .then((data) => setIsAdmin(data.user?.role === "admin"))
+      .catch(() => setIsAdmin(false));
+  }, []);
+
+  useEffect(() => {
+    setPdfUrl(item?.pdfUrl ?? null);
+    setEditingPdf(false);
+    setPdfInput(item?.pdfUrl ?? "");
+    setApplyToWholeBatch(false);
+    setSaveError("");
+    setSaveNotice("");
+  }, [item]);
+
   useEffect(() => {
     if (!item) return;
     function handleKey(e: KeyboardEvent) {
@@ -81,6 +112,51 @@ export default function AdmissionDetailModal({
     item.details?.openDateShort || item.details?.closedDate || item.details?.interviewDate;
   const minGpaBreakdown = item.details?.minGpaBreakdown ?? [];
   const physicalRequirements = item.details?.physicalRequirements ?? [];
+
+  async function handleSavePdfUrl() {
+    setSaving(true);
+    setSaveError("");
+    setSaveNotice("");
+    try {
+      if (applyToWholeBatch && item!.universityId && item!.round) {
+        const res = await fetch(`/api/admin/admissions/bulk-pdf-url`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            universityId: item!.universityId,
+            round: item!.round,
+            pdfUrl: pdfInput.trim(),
+          }),
+        });
+        const data = await res.json().catch(() => null);
+        if (!res.ok) {
+          setSaveError(data?.error || "บันทึกไม่สำเร็จ");
+          return;
+        }
+        setPdfUrl(data.pdfUrl);
+        setEditingPdf(false);
+        setSaveNotice(`บันทึกแล้ว — อัปเดตลิงก์นี้ให้ทั้งหมด ${data.affectedRows.toLocaleString("th-TH")} โครงการของ ${item!.university} รอบเดียวกัน`);
+        return;
+      }
+
+      const res = await fetch(`/api/admin/admissions/${item!.id}/pdf-url`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ pdfUrl: pdfInput.trim() }),
+      });
+      const data = await res.json().catch(() => null);
+      if (!res.ok) {
+        setSaveError(data?.error || "บันทึกไม่สำเร็จ");
+        return;
+      }
+      setPdfUrl(data.pdfUrl);
+      setEditingPdf(false);
+    } catch {
+      setSaveError("เชื่อมต่อเซิร์ฟเวอร์ไม่สำเร็จ");
+    } finally {
+      setSaving(false);
+    }
+  }
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
@@ -105,6 +181,14 @@ export default function AdmissionDetailModal({
             <p className="mt-0.5 text-xs text-gray-500">
               {item.faculty} - {item.major}
             </p>
+            {item.projectName && (
+              <p className="mt-1 text-xs font-bold text-[#003b73]">โครงการ: {item.projectName}</p>
+            )}
+            {item.concentration && (
+              <span className="mt-1.5 inline-block rounded-md bg-emerald-100 px-2.5 py-0.5 text-[10px] font-extrabold text-emerald-800">
+                แขนงวิชา: {item.concentration}
+              </span>
+            )}
           </div>
 
           <div className="space-y-5 p-6">
@@ -237,18 +321,83 @@ export default function AdmissionDetailModal({
               )}
             </section>
 
-            {/* ปุ่มสมัครสอบ — ลิงก์ไปหน้าสมัครจริงของโปรแกรมนี้ (ระบบมหาวิทยาลัยเอง หรือ mytcas.com) */}
-            <a
-              href={item.sourceUrl}
-              target="_blank"
-              rel="noreferrer"
-              className="nb-no-print flex items-center justify-center gap-2 rounded-md bg-[#002b55] py-3.5 text-xs font-extrabold text-white shadow-md transition-all hover:-translate-y-0.5 hover:bg-[#004b8d]"
-            >
-              {item.isCustomPortal
-                ? `สมัครผ่านระบบของมหาวิทยาลัย: ${item.sourceLabel}`
-                : `ไปสมัครสอบที่นี่ — ${item.sourceLabel}`}
-              <FontAwesomeIcon icon={faArrowUpRightFromSquare} className="text-[10px]" />
-            </a>
+            {/* ประกาศรับสมัครฉบับ PDF โดยตรงของโครงการนี้ (ไม่ใช่ลิงก์เว็บทั่วไปของมหาวิทยาลัย) */}
+            {pdfUrl ? (
+              <a
+                href={pdfUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="nb-no-print flex items-center justify-center gap-2 rounded-md bg-[#002b55] py-3.5 text-xs font-extrabold text-white shadow-md transition-all hover:-translate-y-0.5 hover:bg-[#004b8d]"
+              >
+                <FontAwesomeIcon icon={faFilePdf} className="text-red-300" />
+                ดาวน์โหลดประกาศรับสมัคร PDF (ฉบับทางการ)
+              </a>
+            ) : (
+              <div className="nb-no-print flex items-center justify-center gap-2 rounded-md border border-gray-200 bg-gray-50 py-3.5 text-xs font-bold text-gray-400">
+                <FontAwesomeIcon icon={faCircleInfo} />
+                ยังไม่มีประกาศ PDF จากมหาวิทยาลัยนี้
+              </div>
+            )}
+
+            {isAdmin && (
+              <div className="nb-no-print rounded-md border border-dashed border-blue-200 bg-blue-50/40 p-3">
+                {editingPdf ? (
+                  <div className="space-y-2">
+                    <input
+                      type="text"
+                      value={pdfInput}
+                      onChange={(e) => setPdfInput(e.target.value)}
+                      placeholder="วางลิงก์ไฟล์ PDF ประกาศรับสมัคร (https://...)"
+                      className="w-full rounded-md border border-gray-200 px-2.5 py-1.5 text-xs focus:border-blue-400 focus:outline-none"
+                    />
+                    {item.universityId && item.round && (
+                      <label className="flex items-start gap-1.5 text-[11px] text-gray-600">
+                        <input
+                          type="checkbox"
+                          checked={applyToWholeBatch}
+                          onChange={(e) => setApplyToWholeBatch(e.target.checked)}
+                          className="mt-0.5"
+                        />
+                        <span>
+                          ไฟล์นี้เป็นประกาศรวมหลายคณะ — ใช้ลิงก์นี้กับ<strong>ทุกโครงการของ {item.university} ใน{item.roundName}</strong>ด้วย
+                        </span>
+                      </label>
+                    )}
+                    {saveError && <p className="text-[11px] font-bold text-red-500">{saveError}</p>}
+                    <div className="flex gap-2">
+                      <button
+                        onClick={handleSavePdfUrl}
+                        disabled={saving}
+                        className="flex items-center gap-1.5 rounded-md bg-[#003b73] px-3 py-1.5 text-[11px] font-extrabold text-white hover:bg-[#004b8d] disabled:opacity-60"
+                      >
+                        <FontAwesomeIcon icon={faFloppyDisk} />
+                        {saving ? "กำลังบันทึก..." : "บันทึก"}
+                      </button>
+                      <button
+                        onClick={() => {
+                          setEditingPdf(false);
+                          setPdfInput(pdfUrl ?? "");
+                          setSaveError("");
+                        }}
+                        className="rounded-md px-3 py-1.5 text-[11px] font-bold text-gray-500 hover:bg-gray-100"
+                      >
+                        ยกเลิก
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div>
+                    <button
+                      onClick={() => setEditingPdf(true)}
+                      className="text-[11px] font-bold text-[#003b73] hover:underline"
+                    >
+                      {pdfUrl ? "แก้ไขลิงก์ PDF (แอดมิน)" : "+ เพิ่มลิงก์ PDF ประกาศ (แอดมิน)"}
+                    </button>
+                    {saveNotice && <p className="mt-1.5 text-[11px] font-bold text-emerald-600">{saveNotice}</p>}
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* ดาวน์โหลดเกณฑ์การรับสมัครฉบับนี้เป็น PDF */}
             <button

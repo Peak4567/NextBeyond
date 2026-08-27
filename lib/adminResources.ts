@@ -77,6 +77,7 @@ export const ADMIN_RESOURCES: Record<string, ResourceConfig> = {
       { key: "criteria", label: "เกณฑ์การคัดเลือก", type: "textarea" },
       { key: "source_url", label: "ลิงก์ประกาศต้นทาง" },
       { key: "source_label", label: "ชื่อแหล่งที่มา" },
+      { key: "pdf_url", label: "ลิงก์ไฟล์ PDF ประกาศรับสมัคร (ถ้ามี — เว้นว่างถ้ายังไม่มี)" },
       { key: "verified_at", label: "ตรวจสอบล่าสุดเมื่อ (เช่น 29 ก.ค. 2570)" },
     ],
   },
