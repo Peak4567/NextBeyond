@@ -61,6 +61,46 @@ export interface AdmissionCriteriaItem {
   pdfUrl: string | null;
 }
 
+// หาตำแหน่งเริ่มต้นของแต่ละข้อ "N." ในข้อความหนึ่งบรรทัด — ตัวเลขข้อบางที่พิมพ์ติดกัน ("1.เป็นผู้ที่")
+// บางที่เว้นวรรค ("3. หน่วยกิต") จึงเว้นช่องว่างเป็น optional แต่ต้องกันไม่ให้ไปตัดทศนิยมอย่าง
+// "3.00" โดยดูว่าตัวอักษรถัดจากจุดต้อง "ไม่ใช่ตัวเลข" (ทศนิยมจริงจะตามด้วยเลขเสมอ)
+function splitInlineNumberedLine(line: string): string[] {
+  const markerRe = /(\d{1,2})\.\s*(?=[^\d])/g;
+  const starts: number[] = [];
+  let m: RegExpExecArray | null;
+  while ((m = markerRe.exec(line))) {
+    const before = line[m.index - 1];
+    if (m.index === 0 || /\s/.test(before)) {
+      starts.push(m.index);
+    }
+  }
+  if (starts.length < 2) {
+    return [line.replace(/^\d{1,2}\.\s*/, "").trim()].filter(Boolean);
+  }
+  const items: string[] = [];
+  for (let i = 0; i < starts.length; i++) {
+    const chunk = line.slice(starts[i], starts[i + 1] ?? line.length).trim();
+    const withoutMarker = chunk.replace(/^\d{1,2}\.\s*/, "").trim();
+    if (withoutMarker) items.push(withoutMarker);
+  }
+  return items;
+}
+
+// ข้อมูลคุณสมบัติผู้สมัครจากแต่ละมหาวิทยาลัยมีรูปแบบไม่เหมือนกัน บางที่คั่นด้วย "|" (ข้อมูลที่เราใส่เอง)
+// บางที่คั่นด้วยขึ้นบรรทัดใหม่ บางที่อัดข้อความ "1.xxx 2.xxx 3.xxx" ต่อกันในบรรทัดเดียวไม่มีตัวคั่นเลย
+// และบางที่ผสมกันทั้งสองแบบในข้อความเดียว จึงต้องแยกทีละบรรทัดก่อน แล้วลองแกะเลขข้อในแต่ละบรรทัดอีกที
+function splitConditionText(raw: string): string[] {
+  const text = raw.trim();
+  if (!text) return [];
+
+  if (text.includes("|")) {
+    return text.split("|").map((s) => s.trim()).filter(Boolean);
+  }
+
+  const lines = text.split(/\r?\n/).map((s) => s.trim()).filter(Boolean);
+  return lines.flatMap(splitInlineNumberedLine);
+}
+
 export default function AdmissionDetailModal({
   item,
   onClose,
@@ -112,6 +152,7 @@ export default function AdmissionDetailModal({
     item.details?.openDateShort || item.details?.closedDate || item.details?.interviewDate;
   const minGpaBreakdown = item.details?.minGpaBreakdown ?? [];
   const physicalRequirements = item.details?.physicalRequirements ?? [];
+  const conditionItems = splitConditionText(item.details?.condition ?? "");
 
   async function handleSavePdfUrl() {
     setSaving(true);
@@ -258,8 +299,16 @@ export default function AdmissionDetailModal({
                 {item.details?.description && (
                   <p className="rounded-lg bg-gray-50 p-2.5 leading-relaxed">{item.details.description}</p>
                 )}
-                {item.details?.condition && (
-                  <p className="rounded-lg bg-gray-50 p-2.5 leading-relaxed">{item.details.condition}</p>
+                {conditionItems.length > 1 ? (
+                  <ol className="list-decimal space-y-1.5 rounded-lg bg-gray-50 p-2.5 pl-6 leading-relaxed">
+                    {conditionItems.map((line, i) => (
+                      <li key={i}>{line}</li>
+                    ))}
+                  </ol>
+                ) : (
+                  conditionItems[0] && (
+                    <p className="rounded-lg bg-gray-50 p-2.5 leading-relaxed">{conditionItems[0]}</p>
+                  )
                 )}
                 {!item.details?.description && !item.details?.condition && (
                   <p className="text-gray-400">ไม่มีเงื่อนไขเพิ่มเติมนอกจากเกณฑ์คะแนนด้านบน</p>

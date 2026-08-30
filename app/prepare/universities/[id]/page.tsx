@@ -62,6 +62,14 @@ const PDF_STATUS_TABS: { value: "" | "has" | "none"; label: string }[] = [
   { value: "none", label: "ยังไม่มีประกาศ" },
 ];
 
+const LOCAL_LOGO_OVERRIDES: Record<string, string> = {
+  "KU-BKN": "/img/ku-logo.svg",
+  "KU-KPS": "/img/ku-logo.svg",
+  "KU-CSC": "/img/ku-logo.svg",
+  "KU-SB": "/img/ku-logo.svg",
+  "KU-SRC": "/img/ku-logo.svg",
+};
+
 function UniversityLogo({ universityId, university }: { universityId: string; university: string }) {
   const [failed, setFailed] = useState(false);
 
@@ -75,7 +83,7 @@ function UniversityLogo({ universityId, university }: { universityId: string; un
 
   return (
     <img
-      src={`https://assets.mytcas.com/i/logo/${universityId}.png`}
+      src={LOCAL_LOGO_OVERRIDES[universityId] || `https://assets.mytcas.com/i/logo/${universityId}.png`}
       alt={university}
       data-no-fallback="true"
       onError={() => setFailed(true)}

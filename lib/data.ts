@@ -471,6 +471,40 @@ export interface ExamAttempt extends RowDataPacket {
   category_name: string;
 }
 
+export interface InternationalUniversity extends RowDataPacket {
+  id: number;
+  country: string;
+  countryTh: string;
+  nameEn: string;
+  city: string;
+  qsRank: number;
+  qsRankDisplay: string;
+  websiteUrl: string;
+  admissionNote: string | null;
+  documentsRequired: string | null;
+  testPolicy: string | null;
+  deadlines: string | null;
+  applicationFee: string | null;
+  criteriaSourceUrl: string | null;
+  criteriaVerifiedAt: string | null;
+}
+
+export async function getInternationalUniversities(country?: string) {
+  const [rows] = await pool.query<InternationalUniversity[]>(
+    `SELECT id, country, country_th AS countryTh, name_en AS nameEn, city,
+            qs_rank AS qsRank, qs_rank_display AS qsRankDisplay,
+            website_url AS websiteUrl, admission_note AS admissionNote,
+            documents_required AS documentsRequired, test_policy AS testPolicy,
+            deadlines, application_fee AS applicationFee,
+            criteria_source_url AS criteriaSourceUrl, criteria_verified_at AS criteriaVerifiedAt
+     FROM international_universities
+     ${country ? "WHERE country = ?" : ""}
+     ORDER BY country, sort_order`,
+    country ? [country] : []
+  );
+  return rows;
+}
+
 export async function getExamAttemptsForUser(userId: number) {
   const [rows] = await pool.query<ExamAttempt[]>(
     `SELECT a.id, a.exam_set_id, a.score, a.total, a.duration_seconds, a.created_at,

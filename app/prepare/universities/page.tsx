@@ -9,6 +9,7 @@ import {
   faArrowLeftLong,
   faMagnifyingGlass,
   faBuildingColumns,
+  faEarthAmericas,
 } from "@fortawesome/free-solid-svg-icons";
 
 interface UniversitySummary {
@@ -16,6 +17,14 @@ interface UniversitySummary {
   university: string;
   programCount: number;
 }
+
+const LOCAL_LOGO_OVERRIDES: Record<string, string> = {
+  "KU-BKN": "/img/ku-logo.svg",
+  "KU-KPS": "/img/ku-logo.svg",
+  "KU-CSC": "/img/ku-logo.svg",
+  "KU-SB": "/img/ku-logo.svg",
+  "KU-SRC": "/img/ku-logo.svg",
+};
 
 function UniversityLogo({ universityId, university }: { universityId: string; university: string }) {
   const [failed, setFailed] = useState(false);
@@ -30,7 +39,7 @@ function UniversityLogo({ universityId, university }: { universityId: string; un
 
   return (
     <img
-      src={`https://assets.mytcas.com/i/logo/${universityId}.png`}
+      src={LOCAL_LOGO_OVERRIDES[universityId] || `https://assets.mytcas.com/i/logo/${universityId}.png`}
       alt={university}
       data-no-fallback="true"
       onError={() => setFailed(true)}
@@ -70,13 +79,22 @@ export default function UniversitiesSelectorPage() {
           กลับไปหน้าเตรียมพร้อม
         </Link>
 
-        <div className="mt-2 mb-8">
-          <h1 className="text-3xl font-extrabold text-[#003b73] sm:text-4xl">
-            เลือกมหาวิทยาลัย
-          </h1>
-          <p className="mt-1 text-sm text-gray-500">
-            เลือกมหาวิทยาลัยที่สนใจ เพื่อดูเกณฑ์การรับสมัคร TCAS70 ทุกคณะทุกสาขาของมหาวิทยาลัยนั้นโดยตรง
-          </p>
+        <div className="mt-2 mb-8 flex flex-wrap items-end justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-extrabold text-[#003b73] sm:text-4xl">
+              เลือกมหาวิทยาลัย
+            </h1>
+            <p className="mt-1 text-sm text-gray-500">
+              เลือกมหาวิทยาลัยที่สนใจ เพื่อดูเกณฑ์การรับสมัคร TCAS70 ทุกคณะทุกสาขาของมหาวิทยาลัยนั้นโดยตรง
+            </p>
+          </div>
+          <Link
+            href="/prepare/universities/international"
+            className="inline-flex items-center gap-2 rounded-xl border border-blue-100 bg-blue-50 px-4 py-2.5 text-xs font-bold text-[#003b73] transition-all hover:border-blue-300 hover:bg-blue-100"
+          >
+            <FontAwesomeIcon icon={faEarthAmericas} />
+            มหาวิทยาลัยต่างประเทศ
+          </Link>
         </div>
 
         <div className="relative mb-6 max-w-md">
