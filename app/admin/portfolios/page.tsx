@@ -6,10 +6,10 @@ import {
   faFileCircleCheck,
   faCheck,
   faXmark,
-  faImages,
+  faFilePdf,
   faUser,
 } from "@fortawesome/free-solid-svg-icons";
-import { confirmSave, confirmDelete, notifySuccess } from "@/lib/sweetalert";
+import { confirmSave, confirmDelete, notifySuccess, notifyError } from "@/lib/sweetalert";
 
 interface PendingPortfolio {
   id: number;
@@ -19,7 +19,8 @@ interface PendingPortfolio {
   university: string;
   status: "pending";
   createdAt: string;
-  imageCount: number;
+  pageCount: number;
+  pdfPath: string | null;
   coverImage: string | null;
 }
 
@@ -56,13 +57,18 @@ export default function AdminPortfoliosPage() {
     if (!confirmed) return;
 
     setBusyId(id);
-    await fetch(`/api/admin/portfolios/${id}`, {
+    const res = await fetch(`/api/admin/portfolios/${id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ status }),
     });
-    await loadPending();
-    notifySuccess(status === "approved" ? "อนุมัติเล่มผลงานแล้ว" : "ปฏิเสธเล่มผลงานแล้ว");
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      notifyError(data.error || "ดำเนินการไม่สำเร็จ");
+    } else {
+      await loadPending();
+      notifySuccess(status === "approved" ? "อนุมัติเล่มผลงานแล้ว" : "ปฏิเสธเล่มผลงานแล้ว");
+    }
     setBusyId(null);
   }
 
@@ -97,9 +103,20 @@ export default function AdminPortfoliosPage() {
                 </p>
                 <p className="mt-1 text-[11px] text-gray-400">{item.faculty} • {item.university}</p>
                 <p className="mt-1 flex items-center gap-1.5 text-[11px] text-gray-400">
-                  <FontAwesomeIcon icon={faImages} />
-                  {item.imageCount} รูป
+                  <FontAwesomeIcon icon={faFilePdf} />
+                  {item.pageCount} หน้า
                 </p>
+                {item.pdfPath && (
+                  <a
+                    href={item.pdfPath}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mt-1.5 inline-flex items-center gap-1.5 text-[11px] font-bold text-blue-600 hover:underline"
+                  >
+                    <FontAwesomeIcon icon={faFilePdf} />
+                    เปิดดูไฟล์ PDF ก่อนอนุมัติ
+                  </a>
+                )}
 
                 <div className="mt-4 flex gap-2">
                   <button

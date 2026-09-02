@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import type { ResultSetHeader } from "mysql2";
 import { pool } from "@/lib/db";
 import { getSessionUser } from "@/lib/auth";
-import { saveUploadedImage } from "@/lib/upload";
+import { saveUploadedImage, saveUploadedPdf } from "@/lib/upload";
 
 const COVER_BG_OPTIONS = [
   "from-blue-600 to-indigo-800",
@@ -25,48 +25,43 @@ export async function POST(request: Request) {
   const university = String(formData.get("university") ?? "").trim();
   const school = String(formData.get("school") ?? "").trim();
   const tags = String(formData.get("tags") ?? "").trim();
-  const files = formData.getAll("images").filter((f) => f instanceof File) as File[];
+  const pdfFile = formData.get("pdf");
+  const coverFile = formData.get("cover");
+  const pageCount = Number(formData.get("pageCount") ?? 0) || 1;
 
   if (!title || !faculty || !university || !school) {
     return NextResponse.json({ error: "กรุณากรอกข้อมูลให้ครบถ้วน" }, { status: 400 });
   }
-  if (files.length === 0) {
-    return NextResponse.json({ error: "กรุณาอัปโหลดรูปอย่างน้อย 1 รูป" }, { status: 400 });
+  if (!(pdfFile instanceof File)) {
+    return NextResponse.json({ error: "กรุณาอัปโหลดไฟล์ PDF เล่มผลงาน" }, { status: 400 });
+  }
+
+  let pdfPath: string;
+  try {
+    pdfPath = await saveUploadedPdf(pdfFile, "portfolios");
+  } catch (err) {
+    return NextResponse.json({ error: (err as Error).message }, { status: 400 });
+  }
+
+  // รูปหน้าปก render มาจากหน้าแรกของ PDF ฝั่งเบราว์เซอร์แล้วส่งมาด้วย — ถ้าด้วยเหตุผลใดก็ตามไม่มีมา
+  // (เช่น เบราว์เซอร์เก่าที่ render ไม่ได้) ยังคงเก็บเล่มไว้ได้ แค่ไม่มีรูปหน้าปกให้แสดงในรายการ (ใช้พื้นหลังไล่สีแทน)
+  let coverPath: string | null = null;
+  if (coverFile instanceof File) {
+    try {
+      coverPath = await saveUploadedImage(coverFile, "portfolios");
+    } catch {
+      // ไม่ critical — ไม่มีรูปหน้าปกก็ยังอ่านเนื้อหาเล่มจริงจาก PDF ได้ปกติ
+    }
   }
 
   const coverBg = COVER_BG_OPTIONS[Math.floor(Math.random() * COVER_BG_OPTIONS.length)];
 
   const [result] = await pool.query<ResultSetHeader>(
     `INSERT INTO portfolios
-      (user_id, status, title, student_name, school, faculty, university, views, likes, page_count, tags, cover_bg)
-     VALUES (?, 'pending', ?, ?, ?, ?, ?, '0', 0, ?, ?, ?)`,
-    [user.id, title, user.fullName, school, faculty, university, files.length, tags, coverBg]
+      (user_id, status, title, student_name, school, faculty, university, views, likes, page_count, tags, cover_bg, cover_image, pdf_path)
+     VALUES (?, 'pending', ?, ?, ?, ?, ?, '0', 0, ?, ?, ?, ?, ?)`,
+    [user.id, title, user.fullName, school, faculty, university, pageCount, tags, coverBg, coverPath, pdfPath]
   );
 
-  const portfolioId = result.insertId;
-
-  let sortOrder = 0;
-  let firstImagePath: string | null = null;
-  for (const file of files) {
-    try {
-      const imagePath = await saveUploadedImage(file, "portfolios");
-      await pool.query(
-        "INSERT INTO portfolio_images (portfolio_id, image_path, sort_order) VALUES (?, ?, ?)",
-        [portfolioId, imagePath, sortOrder]
-      );
-      if (!firstImagePath) firstImagePath = imagePath;
-      sortOrder += 1;
-    } catch {
-      // ข้ามไฟล์ที่อัปโหลดไม่สำเร็จ (ประเภท/ขนาดไม่ถูกต้อง) แต่ยังคงเก็บเล่มที่อัปโหลดสำเร็จแล้วไว้
-    }
-  }
-
-  if (firstImagePath) {
-    await pool.query("UPDATE portfolios SET cover_image = ? WHERE id = ?", [
-      firstImagePath,
-      portfolioId,
-    ]);
-  }
-
-  return NextResponse.json({ id: portfolioId });
+  return NextResponse.json({ id: result.insertId });
 }

@@ -125,19 +125,20 @@ export default function AdminResourcePage() {
     notifySuccess("ลบข้อมูลเรียบร้อยแล้ว");
   }
 
-  async function handleImageUpload(fieldKey: string, file: File) {
+  async function handleFileUpload(fieldKey: string, file: File, kind: "image" | "pdf") {
     setUploadingField(fieldKey);
     setError("");
 
     const body = new FormData();
     body.append("file", file);
     body.append("folder", UPLOAD_FOLDER_BY_RESOURCE[resource] ?? "general");
+    body.append("type", kind);
 
     const res = await fetch("/api/admin/upload", { method: "POST", body });
     const data = await res.json();
 
     if (!res.ok) {
-      setError(data.error || "อัปโหลดรูปภาพไม่สำเร็จ");
+      setError(data.error || (kind === "pdf" ? "อัปโหลดไฟล์ PDF ไม่สำเร็จ" : "อัปโหลดรูปภาพไม่สำเร็จ"));
     } else {
       setForm((prev) => ({ ...prev, [fieldKey]: data.url }));
     }
@@ -235,7 +236,32 @@ export default function AdminResourcePage() {
                     accept="image/*"
                     onChange={(e) => {
                       const file = e.target.files?.[0];
-                      if (file) handleImageUpload(field.key, file);
+                      if (file) handleFileUpload(field.key, file, "image");
+                    }}
+                    className="w-full text-xs text-gray-600 file:mr-3 file:rounded-lg file:border-0 file:bg-blue-50 file:px-3 file:py-1.5 file:text-xs file:font-bold file:text-blue-700"
+                  />
+                  {uploadingField === field.key && (
+                    <span className="text-[10px] text-gray-400">กำลังอัปโหลด...</span>
+                  )}
+                </div>
+              ) : field.type === "pdf" ? (
+                <div className="flex items-center gap-3">
+                  {form[field.key] ? (
+                    <a
+                      href={form[field.key] as string}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-xs font-bold text-blue-600 hover:underline"
+                    >
+                      เปิดไฟล์ PDF ที่อัปโหลดแล้ว
+                    </a>
+                  ) : null}
+                  <input
+                    type="file"
+                    accept="application/pdf"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) handleFileUpload(field.key, file, "pdf");
                     }}
                     className="w-full text-xs text-gray-600 file:mr-3 file:rounded-lg file:border-0 file:bg-blue-50 file:px-3 file:py-1.5 file:text-xs file:font-bold file:text-blue-700"
                   />
@@ -304,6 +330,15 @@ export default function AdminResourcePage() {
                           alt=""
                           className="h-10 w-10 rounded-lg object-cover"
                         />
+                      ) : field.type === "pdf" && item[field.key] ? (
+                        <a
+                          href={String(item[field.key])}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="font-bold text-blue-600 hover:underline"
+                        >
+                          เปิดไฟล์ PDF
+                        </a>
                       ) : (
                         String(item[field.key] ?? "")
                       )}

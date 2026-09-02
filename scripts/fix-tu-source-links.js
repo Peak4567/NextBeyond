@@ -5,7 +5,9 @@
 //    ซึ่งเป็นผลจากการซิงก์ที่ดึงคอลัมน์ผิด (หมายเหตุ แทนที่จะเป็นลิงก์จริง) — แทนที่ด้วยหน้าเกณฑ์การรับสมัครของ มธ. โดยตรง
 const mysql = require("mysql2/promise");
 
-const CORRECT_PDF_URL = "https://www.tuadmissions.in.th/img/2026082807385532.pdf";
+// หมายเหตุ: มธ. เปลี่ยนชื่อไฟล์นี้เป็นระยะเมื่อมีการแก้ไขประกาศ (เจอมาแล้วว่าไฟล์เก่าใช้ไม่ได้หลังผ่านไปไม่กี่วัน)
+// ถ้าลิงก์นี้เสียอีกในอนาคต ต้องเข้าไปที่ https://www.tuadmissions.in.th/admissions แล้วหาไฟล์ประกาศรอบ 1 ล่าสุดใหม่
+const CORRECT_PDF_URL = "https://www.tuadmissions.in.th/img/2026090207375193.pdf";
 const FALLBACK_SOURCE_URL = "https://www.tuadmissions.in.th/admissions";
 
 async function main() {

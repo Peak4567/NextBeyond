@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import type { RowDataPacket } from "mysql2";
 import { pool } from "@/lib/db";
 import { getSessionUser } from "@/lib/auth";
 
@@ -20,6 +21,23 @@ export async function PATCH(
   const status = body?.status;
   if (status !== "approved" && status !== "rejected") {
     return NextResponse.json({ error: "สถานะไม่ถูกต้อง" }, { status: 400 });
+  }
+
+  // กันไม่ให้อนุมัติเล่มที่ไม่มีเนื้อหาเลย (ไม่มีทั้งไฟล์ PDF และไม่มีรูปแบบเก่า)
+  // ป้องกันเล่มผลงานว่างเปล่าไปโผล่ในหน้าชุมชนนักเรียนหลังอนุมัติ
+  if (status === "approved") {
+    const [rows] = await pool.query<RowDataPacket[]>(
+      `SELECT p.pdf_path,
+              (SELECT COUNT(*) FROM portfolio_images pi WHERE pi.portfolio_id = p.id) AS imageCount
+       FROM portfolios p WHERE p.id = ?`,
+      [id]
+    );
+    if (!rows[0] || (!rows[0].pdf_path && rows[0].imageCount === 0)) {
+      return NextResponse.json(
+        { error: "เล่มนี้ไม่มีไฟล์ PDF หรือรูปภาพเลย อนุมัติไม่ได้ — กรุณาปฏิเสธแล้วแจ้งให้นักเรียนอัปโหลดใหม่" },
+        { status: 400 }
+      );
+    }
   }
 
   await pool.query("UPDATE portfolios SET status = ? WHERE id = ?", [status, id]);

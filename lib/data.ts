@@ -82,6 +82,7 @@ export interface Portfolio extends RowDataPacket {
   tags: string;
   cover_bg: string;
   cover_image: string | null;
+  pdf_path: string | null;
 }
 
 export interface PortfolioImage extends RowDataPacket {
@@ -322,7 +323,7 @@ export async function getNewsHotTopics() {
 
 export async function getPortfolios() {
   const [rows] = await pool.query<Portfolio[]>(
-    `SELECT id, title, student_name, school, faculty, university, views, likes, page_count, tags, cover_bg, cover_image
+    `SELECT id, title, student_name, school, faculty, university, views, likes, page_count, tags, cover_bg, cover_image, pdf_path
      FROM portfolios WHERE status = 'approved' ORDER BY sort_order, id`
   );
   return rows;
@@ -330,7 +331,7 @@ export async function getPortfolios() {
 
 export async function getPortfolioById(id: number) {
   const [rows] = await pool.query<Portfolio[]>(
-    `SELECT id, title, student_name, school, faculty, university, views, likes, page_count, tags, cover_bg, cover_image
+    `SELECT id, title, student_name, school, faculty, university, views, likes, page_count, tags, cover_bg, cover_image, pdf_path
      FROM portfolios WHERE id = ? AND status = 'approved'`,
     [id]
   );

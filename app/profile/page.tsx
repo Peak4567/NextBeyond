@@ -10,8 +10,8 @@ import {
   faEnvelope,
   faFloppyDisk,
   faCloudArrowUp,
-  faImages,
   faHeart,
+  faFilePdf,
 } from "@fortawesome/free-solid-svg-icons";
 import { confirmSave, notifySuccess, notifyError } from "@/lib/sweetalert";
 
@@ -39,6 +39,13 @@ const STATUS_LABELS: Record<MyPortfolio["status"], { label: string; className: s
   rejected: { label: "ถูกปฏิเสธ", className: "bg-red-100 text-red-600" },
 };
 
+function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
+  return Promise.race([
+    promise,
+    new Promise<T>((_, reject) => setTimeout(() => reject(new Error("timeout")), ms)),
+  ]);
+}
+
 export default function ProfilePage() {
   const router = useRouter();
   const [user, setUser] = useState<SessionUser | null | undefined>(undefined);
@@ -57,10 +64,64 @@ export default function ProfilePage() {
   const [university, setUniversity] = useState("");
   const [school, setSchool] = useState("");
   const [tags, setTags] = useState("");
-  const [images, setImages] = useState<FileList | null>(null);
+  const [pdfFile, setPdfFile] = useState<File | null>(null);
+  const [coverPreview, setCoverPreview] = useState("");
+  const [pageCount, setPageCount] = useState(0);
+  const [coverBlob, setCoverBlob] = useState<Blob | null>(null);
+  const [preparingPdf, setPreparingPdf] = useState(false);
   const [uploadError, setUploadError] = useState("");
   const [uploadSuccess, setUploadSuccess] = useState("");
   const [uploading, setUploading] = useState(false);
+
+  // เปิดไฟล์ PDF ที่เลือกด้วย pdf.js ฝั่งเบราว์เซอร์ เพื่อ render หน้าแรกเป็นรูปหน้าปก และนับจำนวนหน้าทั้งเล่ม
+  async function handlePdfSelect(file: File | null) {
+    setPdfFile(file);
+    setCoverPreview("");
+    setCoverBlob(null);
+    setPageCount(0);
+    setUploadError("");
+    if (!file) return;
+
+    if (file.type !== "application/pdf") {
+      setUploadError("กรุณาเลือกไฟล์ PDF เท่านั้น");
+      setPdfFile(null);
+      return;
+    }
+
+    setPreparingPdf(true);
+    try {
+      const pdfjsLib = await import("pdfjs-dist");
+      pdfjsLib.GlobalWorkerOptions.workerSrc = "/pdf.worker.min.mjs";
+
+      const arrayBuffer = await file.arrayBuffer();
+      const pdf = await withTimeout(pdfjsLib.getDocument({ data: arrayBuffer }).promise, 20000);
+      setPageCount(pdf.numPages);
+
+      const page = await pdf.getPage(1);
+      const viewport = page.getViewport({ scale: 1.5 });
+      const canvas = document.createElement("canvas");
+      canvas.width = viewport.width;
+      canvas.height = viewport.height;
+      const context = canvas.getContext("2d");
+      if (context) {
+        // page.render() ใช้ requestAnimationFrame ภายใน ถ้าแท็บถูกซ่อน/สลับไปแท็บอื่นระหว่างรอ
+        // เบราว์เซอร์จะหน่วง rAF จนค้างไม่จบ ใส่ timeout กันไว้เพื่อไม่ให้ค้างตลอดไป
+        await withTimeout(page.render({ canvasContext: context, viewport }).promise, 20000);
+        const blob: Blob | null = await new Promise((resolve) => canvas.toBlob(resolve, "image/png"));
+        if (blob) {
+          setCoverBlob(blob);
+          setCoverPreview(URL.createObjectURL(blob));
+        }
+      }
+    } catch {
+      setUploadError(
+        "ไม่สามารถอ่านไฟล์ PDF นี้ได้ (ไฟล์อาจเสียหาย ไม่ใช่ไฟล์ PDF ที่ถูกต้อง หรือแท็บถูกสลับไปหน้าอื่นระหว่างประมวลผล — ลองใหม่โดยไม่สลับแท็บระหว่างรอ)"
+      );
+      setPdfFile(null);
+    } finally {
+      setPreparingPdf(false);
+    }
+  }
 
   useEffect(() => {
     fetch("/api/auth/me")
@@ -124,8 +185,8 @@ export default function ProfilePage() {
     setUploadError("");
     setUploadSuccess("");
 
-    if (!images || images.length === 0) {
-      setUploadError("กรุณาเลือกรูปเล่มผลงานอย่างน้อย 1 รูป");
+    if (!pdfFile) {
+      setUploadError("กรุณาเลือกไฟล์ PDF เล่มผลงาน");
       return;
     }
 
@@ -136,7 +197,9 @@ export default function ProfilePage() {
     body.append("university", university);
     body.append("school", school);
     body.append("tags", tags);
-    Array.from(images).forEach((file) => body.append("images", file));
+    body.append("pdf", pdfFile);
+    body.append("pageCount", String(pageCount || 1));
+    if (coverBlob) body.append("cover", coverBlob, "cover.png");
 
     const res = await fetch("/api/portfolio", { method: "POST", body });
     const data = await res.json();
@@ -150,7 +213,10 @@ export default function ProfilePage() {
       setUniversity("");
       setSchool("");
       setTags("");
-      setImages(null);
+      setPdfFile(null);
+      setCoverPreview("");
+      setCoverBlob(null);
+      setPageCount(0);
       await loadMyPortfolios();
     }
     setUploading(false);
@@ -301,20 +367,36 @@ export default function ProfilePage() {
 
               <div>
                 <label className="mb-1.5 flex items-center gap-2 text-xs font-bold text-gray-700">
-                  <FontAwesomeIcon icon={faImages} /> รูปเล่มผลงาน (เลือกได้หลายรูป)
+                  <FontAwesomeIcon icon={faFilePdf} /> ไฟล์ PDF เล่มผลงาน
                 </label>
                 <input
                   type="file"
-                  accept="image/*"
-                  multiple
-                  onChange={(e) => setImages(e.target.files)}
+                  accept="application/pdf"
+                  onChange={(e) => handlePdfSelect(e.target.files?.[0] ?? null)}
                   className="w-full text-xs text-gray-600 file:mr-3 file:rounded-lg file:border-0 file:bg-blue-50 file:px-3 file:py-1.5 file:text-xs file:font-bold file:text-blue-700"
                 />
+                {preparingPdf && (
+                  <p className="mt-2 text-[11px] text-gray-400">กำลังอ่านไฟล์ PDF และสร้างรูปหน้าปก...</p>
+                )}
+                {coverPreview && !preparingPdf && (
+                  <div className="mt-3 flex items-center gap-3">
+                    <img
+                      src={coverPreview}
+                      alt="ตัวอย่างหน้าปก"
+                      className="h-24 w-auto rounded-md border border-gray-200 object-contain shadow-sm"
+                    />
+                    <p className="text-[11px] text-gray-500">
+                      หน้าปก (ดึงจากหน้าแรกของ PDF อัตโนมัติ)
+                      <br />
+                      ทั้งหมด {pageCount} หน้า
+                    </p>
+                  </div>
+                )}
               </div>
 
               <button
                 type="submit"
-                disabled={uploading}
+                disabled={uploading || preparingPdf || !pdfFile}
                 className="flex items-center gap-2 rounded-xl bg-[#002b55] px-6 py-2.5 text-xs font-extrabold text-white shadow-md transition-all hover:bg-[#004b8d] disabled:opacity-60"
               >
                 <FontAwesomeIcon icon={faCloudArrowUp} />

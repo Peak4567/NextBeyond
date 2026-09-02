@@ -16,7 +16,7 @@ import {
 export interface ResourceField {
   key: string;
   label: string;
-  type?: "text" | "number" | "textarea" | "checkbox" | "select" | "image";
+  type?: "text" | "number" | "textarea" | "checkbox" | "select" | "image" | "pdf";
   options?: { value: string; label: string }[];
 }
 
@@ -159,7 +159,7 @@ export const ADMIN_RESOURCES: Record<string, ResourceConfig> = {
       { key: "page_count", label: "จำนวนหน้า", type: "number" },
       { key: "tags", label: "แท็ก (คั่นด้วย , )" },
       { key: "cover_bg", label: "โทนสีภาพปก (ใช้เมื่อไม่มีรูปจริง)", type: "select", options: PORTFOLIO_COVER_OPTIONS },
-      { key: "cover_image", label: "ภาพหน้าปก (ไม่บังคับ)", type: "image" },
+      { key: "pdf_path", label: "ไฟล์ PDF เล่มผลงาน", type: "pdf" },
     ],
   },
   discussions: {

@@ -4,6 +4,8 @@ import { pool } from "@/lib/db";
 import { getSessionUser } from "@/lib/auth";
 import { getPortfolioById, getPortfolioImages, getPortfolioComments } from "@/lib/data";
 
+export const dynamic = "force-dynamic";
+
 export async function GET(
   _request: Request,
   { params }: { params: { id: string } }

@@ -11,9 +11,9 @@ export async function GET() {
 
   const [rows] = await pool.query<RowDataPacket[]>(
     `SELECT p.id, p.title, p.student_name AS studentName, p.faculty, p.university,
-            p.status, p.created_at AS createdAt,
-            (SELECT COUNT(*) FROM portfolio_images pi WHERE pi.portfolio_id = p.id) AS imageCount,
-            (SELECT image_path FROM portfolio_images pi WHERE pi.portfolio_id = p.id ORDER BY sort_order, id LIMIT 1) AS coverImage
+            p.status, p.created_at AS createdAt, p.page_count AS pageCount,
+            p.pdf_path AS pdfPath,
+            COALESCE(p.cover_image, (SELECT image_path FROM portfolio_images pi WHERE pi.portfolio_id = p.id ORDER BY sort_order, id LIMIT 1)) AS coverImage
      FROM portfolios p
      WHERE p.status = 'pending'
      ORDER BY p.created_at ASC`

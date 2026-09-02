@@ -8,6 +8,7 @@ import Footer from "@/components/Footer";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faHeart as faHeartSolid, faEye, faComments } from "@fortawesome/free-solid-svg-icons";
 import { faHeart as faHeartRegular } from "@fortawesome/free-regular-svg-icons";
+import PdfViewer from "@/components/PdfViewer";
 
 interface PortfolioDetail {
   id: number;
@@ -21,6 +22,7 @@ interface PortfolioDetail {
   tags: string;
   cover_bg: string;
   cover_image?: string | null;
+  pdf_path?: string | null;
 }
 
 interface PortfolioImg {
@@ -210,22 +212,31 @@ export default function PortfolioDetailPage() {
           </div>
         </div>
 
-        {/* --- เนื้อหาภายในเล่ม แสดงเป็นหน้ากระดาษ A4 ทีละหน้า --- */}
-        {images.length > 0 && (
-          <div className="mt-8 space-y-8">
-            <p className="text-center text-[10px] font-semibold uppercase tracking-widest text-gray-400">
-              เนื้อหาภายในเล่ม ({images.length} หน้า)
-            </p>
-            {images.map((img, index) => (
-              <div key={img.id} className="mx-auto w-full max-w-2xl">
-                <div className="aspect-[210/297] w-full overflow-hidden rounded-sm border border-gray-200 bg-white shadow-lg">
-                  <img src={img.image_path} alt="" className="h-full w-full object-contain" />
+        {/* --- เนื้อหาภายในเล่ม เลื่อนดูได้ทุกหน้า ต่อจากหน้าปกด้านบน --- */}
+        <div className="mt-8">
+          {portfolio.pdf_path ? (
+            <PdfViewer src={portfolio.pdf_path} />
+          ) : images.length > 0 ? (
+            // เล่มเก่าที่อัปโหลดแบบรูปภาพทีละหน้า (ก่อนเปลี่ยนมาใช้ไฟล์ PDF) — ยังแสดงผลได้ตามปกติ
+            <div className="space-y-8">
+              <p className="text-center text-[10px] font-semibold uppercase tracking-widest text-gray-400">
+                เนื้อหาภายในเล่ม ({images.length} หน้า) — เลื่อนลงเพื่อดูทุกหน้า
+              </p>
+              {images.map((img, index) => (
+                <div key={img.id} className="mx-auto w-full max-w-2xl">
+                  <div className="aspect-[210/297] w-full overflow-hidden rounded-sm border border-gray-200 bg-white shadow-lg">
+                    <img src={img.image_path} alt="" className="h-full w-full object-contain" />
+                  </div>
+                  <p className="mt-1.5 text-center text-[10px] font-semibold text-gray-400">หน้า {index + 1}</p>
                 </div>
-                <p className="mt-1.5 text-center text-[10px] font-semibold text-gray-400">หน้า {index + 1}</p>
-              </div>
-            ))}
-          </div>
-        )}
+              ))}
+            </div>
+          ) : (
+            <div className="rounded-xl border border-dashed border-gray-200 bg-white p-8 text-center text-xs text-gray-400">
+              เล่มนี้ยังไม่มีหน้าเนื้อหาภายใน (มีแค่หน้าปก)
+            </div>
+          )}
+        </div>
 
         {/* Comments */}
         <div className="mt-6 rounded-xl border border-gray-100 bg-white p-6 shadow-sm">
